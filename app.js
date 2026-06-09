@@ -32,7 +32,10 @@ app.use('/settings', require('./routes/settings'));
 app.use('/transactions', require('./routes/transactions'));
 app.use('/upload', require('./routes/upload'));
 app.use('/communications', require('./routes/communications'));
+app.use('/products', require('./routes/productViews'));
+app.use('/products', require('./routes/productMetrics'));
 app.use('/products', require('./routes/products'));
+app.use('/sales', require('./routes/sales'));
 app.use('/trainers', require('./routes/trainers'));
 
 app.get('/', (req, res) => {

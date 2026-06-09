@@ -56,6 +56,44 @@ async function initializeSchema() {
       updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS products (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL DEFAULT '',
+      description TEXT,
+      price DECIMAL(12,2) DEFAULT 0,
+      isActive BOOLEAN DEFAULT true,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS product_views (
+      id SERIAL PRIMARY KEY,
+      product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      source VARCHAR(100) DEFAULT 'direct'
+    );
+
+    CREATE TABLE IF NOT EXISTS product_metrics (
+      id SERIAL PRIMARY KEY,
+      product_id INTEGER UNIQUE REFERENCES products(id) ON DELETE CASCADE,
+      total_views INTEGER DEFAULT 0,
+      total_sales INTEGER DEFAULT 0,
+      revenue DECIMAL(14,2) DEFAULT 0,
+      rating DECIMAL(3,2) DEFAULT 0,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS sales (
+      id SERIAL PRIMARY KEY,
+      product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+      quantity INTEGER DEFAULT 1,
+      unit_price DECIMAL(12,2) NOT NULL,
+      total DECIMAL(14,2) NOT NULL,
+      customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+      sold_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS support_requests (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL DEFAULT '',
