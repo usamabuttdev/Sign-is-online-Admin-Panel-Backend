@@ -9,7 +9,7 @@ on:
 jobs:
   deploy:
     name: Deploy to EC2
-    runs-on: your-backend-runner-label
+    runs-on: sign-in-backend
 
     steps:
       - name: Checkout repository
