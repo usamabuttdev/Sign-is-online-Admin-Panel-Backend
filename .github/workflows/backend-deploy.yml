@@ -1,5 +1,4 @@
 name: Build & Deploy Backend
-
 on:
   push:
     branches:
@@ -10,10 +9,11 @@ jobs:
   deploy:
     name: Deploy to EC2
     runs-on: sign-in-backend
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Pull latest code
+        run: |
+          cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
+          git pull origin main
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -21,11 +21,12 @@ jobs:
           node-version: "20"
 
       - name: Install dependencies
+        working-directory: /home/ec2-user/Sign-is-online-Admin-Panel-Backend
         run: npm install
 
       - name: Reload app with PM2
         run: |
-          cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend/
+          cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
           pm2 reload ecosystem.config.js --update-env || pm2 start ecosystem.config.js
           pm2 save
 
