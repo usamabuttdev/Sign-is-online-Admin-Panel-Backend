@@ -1,24 +1,71 @@
 const sql = require('mssql');
 
-const MSSQL_CONFIG = {
-  server: process.env.DEV_DB_HOST || 'dev.cqv82ucmgull.us-east-1.rds.amazonaws.com',
-  port: parseInt(process.env.DEV_DB_PORT || '1433'),
-  user: process.env.DEV_DB_USER || 'IO_JUYI_Avy_zi8w',
-  password: process.env.DEV_DB_PASS || 'SimplePass123?',
-  database: process.env.DEV_DB_NAME || 'STOREFRONT',
-  options: {
-    encrypt: false,
-    trustServerCertificate: true,
-  },
-  connectionTimeout: 10000,
-  requestTimeout: 15000,
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+
+const SECRET_NAME = 'storefront/rds-credentials';
+const DEFAULTS = {
+  server: 'dev.cqv82ucmgull.us-east-1.rds.amazonaws.com',
+  port: 1433,
+  user: 'IO_JUYI_Avy_zi8w',
+  password: 'SimplePass123?',
+  database: 'STOREFRONT',
 };
 
+let cachedConfig = null;
 let pool = null;
+
+async function loadConfig() {
+  if (cachedConfig) return cachedConfig;
+
+  // Try AWS Secrets Manager first
+  try {
+    const client = new SecretsManagerClient({ region: 'us-east-1' });
+    const secret = await client.send(new GetSecretValueCommand({ SecretId: SECRET_NAME }));
+    if (secret.SecretString) {
+      const parsed = JSON.parse(secret.SecretString);
+      cachedConfig = {
+        server: parsed.host || parsed.server || DEFAULTS.server,
+        port: parseInt(parsed.port || DEFAULTS.port),
+        user: parsed.username || parsed.user || DEFAULTS.user,
+        password: parsed.password || DEFAULTS.password,
+        database: parsed.database || parsed.dbname || DEFAULTS.database,
+      };
+      return cachedConfig;
+    }
+  } catch {
+    // No AWS creds available — fall through to env/defaults
+  }
+
+  cachedConfig = {
+    server: process.env.DEV_DB_HOST || DEFAULTS.server,
+    port: parseInt(process.env.DEV_DB_PORT || DEFAULTS.port),
+    user: process.env.DEV_DB_USER || DEFAULTS.user,
+    password: process.env.DEV_DB_PASS || DEFAULTS.password,
+    database: process.env.DEV_DB_NAME || DEFAULTS.database,
+  };
+  return cachedConfig;
+}
+
+function buildMssqlConfig(cfg) {
+  return {
+    server: cfg.server,
+    port: cfg.port,
+    user: cfg.user,
+    password: cfg.password,
+    database: cfg.database,
+    options: {
+      encrypt: false,
+      trustServerCertificate: true,
+    },
+    connectionTimeout: 10000,
+    requestTimeout: 15000,
+  };
+}
 
 async function getPool() {
   if (!pool) {
-    pool = await sql.connect(MSSQL_CONFIG);
+    const cfg = await loadConfig();
+    pool = await sql.connect(buildMssqlConfig(cfg));
   }
   return pool;
 }
