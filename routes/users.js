@@ -10,13 +10,12 @@ router.get('/all-users', authenticateToken, async (req, res) => {
     const offset = (parseInt(page) - 1) * parseInt(limit);
     let where = 'WHERE 1=1';
     const countParams = [];
-    if (keyword) { where += ' AND (Email LIKE $1 OR FullName LIKE $1)'; countParams.push(`%${keyword}%`); }
+    if (keyword) { where += ' AND (Email LIKE $1 OR FullName LIKE $1 OR Phone LIKE $1)'; countParams.push(`%${keyword}%`); }
     const countResult = await db.query(`SELECT COUNT(*) as cnt FROM USR ${where}`, countParams);
     const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].cnt) : 0;
     const dataParams = keyword ? [`%${keyword}%`, parseInt(limit), offset] : [parseInt(limit), offset];
-    const dataSQL = keyword
-      ? 'SELECT UserID as id, COALESCE(FullName, Email) as name, Email as email, Role as role, CreatedAt as createdat FROM USR WHERE Email LIKE $1 OR FullName LIKE $1 ORDER BY CreatedAt DESC LIMIT $2 OFFSET $3'
-      : 'SELECT UserID as id, COALESCE(FullName, Email) as name, Email as email, Role as role, CreatedAt as createdat FROM USR WHERE 1=1 ORDER BY CreatedAt DESC LIMIT $1 OFFSET $2';
+    const whereSQL = keyword ? 'WHERE Email LIKE $1 OR FullName LIKE $1 OR Phone LIKE $1' : 'WHERE 1=1';
+    const dataSQL = `SELECT UserID as id, COALESCE(FullName, Email) as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat FROM USR ${whereSQL} ORDER BY CreatedAt DESC LIMIT ${keyword ? '$2' : '$1'} OFFSET ${keyword ? '$3' : '$2'}`;
     const result = await db.query(dataSQL, dataParams);
     res.json({ success: true, data: result.rows, total, page: parseInt(page), limit: parseInt(limit) });
   } catch (err) {
