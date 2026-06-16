@@ -24,13 +24,20 @@ jobs:
         working-directory: /home/ec2-user/Sign-is-online-Admin-Panel-Backend
         run: npm install
 
-      - name: Reload app with PM2
+      - name: Stop old backend service
+        run: |
+          sudo systemctl stop backend 2>/dev/null || true
+          sudo systemctl kill backend 2>/dev/null || true
+
+      - name: Start backend as systemd service (survives runner cleanup)
         run: |
           cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
-          pm2 reload ecosystem.config.js --update-env || pm2 start ecosystem.config.js
-          pm2 save
+          sudo systemd-run --unit=backend \
+            --working-directory=/home/ec2-user/Sign-is-online-Admin-Panel-Backend \
+            --setenv=PORT=5000 \
+            node app.js
 
       - name: Health check
         run: |
           sleep 5
-          curl --fail http://localhost:5000 || (pm2 logs backend --lines 50 && exit 1)
+          curl --fail http://localhost:5000 || (sudo journalctl -u backend --no-pager -n 50 && exit 1)
