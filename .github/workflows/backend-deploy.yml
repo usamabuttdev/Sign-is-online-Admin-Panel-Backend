@@ -5,6 +5,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: backend-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     name: Deploy to EC2
@@ -24,18 +28,19 @@ jobs:
         working-directory: /home/ec2-user/Sign-is-online-Admin-Panel-Backend
         run: npm install
 
-      - name: Ensure PM2 daemon is managed by systemd
-        run: |
-          sudo env PATH=$PATH pm2 startup -u ec2-user --hp /home/ec2-user 2>/dev/null || true
-          sudo systemctl start pm2-ec2-user 2>/dev/null || true
-
-      - name: Start backend with PM2
+      - name: Start backend via systemd-run
         run: |
           cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
-          pm2 delete all 2>/dev/null || true
-          pm2 start app.js --name backend -- --port=5000
+          NODE_BIN=$(which node)
+          sudo systemctl stop backend 2>/dev/null || true
+          sudo systemctl kill backend 2>/dev/null || true
+          sudo systemctl reset-failed backend 2>/dev/null || true
+          sudo systemd-run --unit=backend \
+            --working-directory=/home/ec2-user/Sign-is-online-Admin-Panel-Backend \
+            --setenv=PORT=5000 \
+            ${NODE_BIN} app.js
 
       - name: Health check
         run: |
           sleep 5
-          curl --fail http://localhost:5000 || exit 1
+          curl --fail http://localhost:5000 || (sudo journalctl -u backend --no-pager -n 50 && exit 1)
