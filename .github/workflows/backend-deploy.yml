@@ -72,6 +72,14 @@ jobs:
           curl -s -o /tmp/health-test.txt -w "HTTP_CODE:%{http_code}\n" \
             "http://localhost:5000/health"
           cat /tmp/health-test.txt
+          echo ""
+
+      - name: Network diagnostics
+        run: |
+          echo "::notice::HOSTNAME=$(hostname)"
+          echo "::notice::PRIVATE_IP=$(hostname -I 2>/dev/null | awk '{print $1}')"
+          echo "::notice::PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || echo unknown)"
+          echo "::notice::BACKEND_PORT=$(ss -tlnp | grep 5000 || echo 'NOT_FOUND')"
 
       - name: Upload diagnostics
         if: always()
