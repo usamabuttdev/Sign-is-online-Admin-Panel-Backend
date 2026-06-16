@@ -27,8 +27,9 @@ jobs:
       - name: Restart backend via systemd
         run: |
           cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
-          # Create persistent systemd service for the backend
-          sudo tee /etc/systemd/system/backend.service > /dev/null <<'SERVICE'
+          NODE_BIN=$(which node)
+          echo "Using node: ${NODE_BIN}"
+          sudo tee /etc/systemd/system/backend.service > /dev/null <<SERVICE
 [Unit]
 Description=Storefront Backend API
 After=network.target
@@ -37,7 +38,7 @@ After=network.target
 Type=simple
 User=ec2-user
 WorkingDirectory=/home/ec2-user/Sign-is-online-Admin-Panel-Backend
-ExecStart=/usr/bin/env node app.js
+ExecStart=${NODE_BIN} app.js
 Restart=on-failure
 RestartSec=5
 Environment=PORT=5000
