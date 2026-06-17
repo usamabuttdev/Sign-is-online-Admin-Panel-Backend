@@ -46,6 +46,17 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is healthy!' });
 });
 
+// 404 handler — return JSON instead of HTML
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
+});
+
+// Global error handler — return JSON instead of Express's default HTML
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(err.status || 500).json({ success: false, message: err.message || 'Internal server error' });
+});
+
 async function start() {
   try {
     await initializeSchema();
