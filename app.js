@@ -42,6 +42,32 @@ app.get('/', (req, res) => {
   res.send('Welcome to our boilerplate Expressjs server');
 });
 
+app.get('/diagnostics', async (req, res) => {
+  const results = { mssql: { connect: false, query: false }, postgres: { connect: false, query: false } };
+  try {
+    const devDb = require('./services/dev-db');
+    await devDb.getPool();
+    results.mssql.connect = true;
+    try {
+      const q = await devDb.query('SELECT 1 AS ok');
+      results.mssql.query = q.rows.length > 0;
+    } catch (e) {
+      results.mssql.queryError = e.message;
+    }
+  } catch (e) {
+    results.mssql.connectError = e.message;
+  }
+  try {
+    const pg = require('./db');
+    const q = await pg.query('SELECT 1 AS ok');
+    results.postgres.connect = true;
+    results.postgres.query = q.rows.length > 0;
+  } catch (e) {
+    results.postgres.connectError = e.message;
+  }
+  res.json({ success: true, data: results });
+});
+
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is healthy!' });
 });
