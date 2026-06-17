@@ -26,10 +26,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/usamabuttdev/Sign-is-online-Admin-Panel-Backend.git"
+    "url": "git+https://github.com/usamabuttdev/Storefront-Admin-Panel-Backend.git"
   },
   "bugs": {
-    "url": "https://github.com/usamabuttdev/Sign-is-online-Admin-Panel-Backend/issues"
+    "url": "https://github.com/usamabuttdev/Storefront-Admin-Panel-Backend/issues"
   },
-  "homepage": "https://github.com/usamabuttdev/Sign-is-online-Admin-Panel-Backend#readme"
+  "homepage": "https://github.com/usamabuttdev/Storefront-Admin-Panel-Backend#readme"
 }

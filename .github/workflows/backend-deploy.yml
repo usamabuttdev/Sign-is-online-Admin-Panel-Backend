@@ -12,11 +12,11 @@ concurrency:
 jobs:
   deploy:
     name: Deploy to EC2
-    runs-on: sign-in-backend
+    runs-on: storefront-backend
     steps:
       - name: Pull latest code
         run: |
-          cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
+          cd /home/ec2-user/Storefront-Admin-Panel-Backend
           git pull origin main
 
       - name: Set up Node.js
@@ -25,18 +25,18 @@ jobs:
           node-version: "20"
 
       - name: Install dependencies
-        working-directory: /home/ec2-user/Sign-is-online-Admin-Panel-Backend
+        working-directory: /home/ec2-user/Storefront-Admin-Panel-Backend
         run: npm install
 
       - name: Start backend via systemd-run
         run: |
-          cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
+          cd /home/ec2-user/Storefront-Admin-Panel-Backend
           NODE_BIN=$(which node)
           sudo systemctl stop backend 2>/dev/null || true
           sudo systemctl kill backend 2>/dev/null || true
           sudo systemctl reset-failed backend 2>/dev/null || true
           sudo systemd-run --unit=backend \
-            --working-directory=/home/ec2-user/Sign-is-online-Admin-Panel-Backend \
+            --working-directory=/home/ec2-user/Storefront-Admin-Panel-Backend \
             --setenv=PORT=5000 \
             ${NODE_BIN} app.js
 
