@@ -6,6 +6,7 @@ async function initializeSchema() {
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL DEFAULT '',
       email VARCHAR(255) UNIQUE NOT NULL,
+      phone VARCHAR(50) DEFAULT '',
       password VARCHAR(255) NOT NULL,
       role VARCHAR(50) DEFAULT 'admin',
       isActive BOOLEAN DEFAULT true,

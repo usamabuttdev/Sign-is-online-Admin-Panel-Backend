@@ -8,12 +8,27 @@ async function seed() {
     const existing = await db.query('SELECT id FROM users WHERE email = $1', ['admin@example.com']);
     if (existing.rows.length === 0) {
       const hashed = await bcrypt.hash('admin123', 10);
-      await db.query('INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)', ['Admin', 'admin@example.com', hashed, 'admin']);
+      await db.query('INSERT INTO users (name, email, phone, password, role) VALUES ($1, $2, $3, $4, $5)', ['Admin', 'admin@example.com', '+1-555-0100', hashed, 'admin']);
       console.log('Admin user created: admin@example.com / admin123');
     } else {
       const hashed = await bcrypt.hash('admin123', 10);
       await db.query('UPDATE users SET password = $1 WHERE email = $2', [hashed, 'admin@example.com']);
       console.log('Admin password reset: admin@example.com / admin123');
+    }
+
+    const userCount = await db.query('SELECT COUNT(*)::int AS count FROM users');
+    if (userCount.rows[0].count < 5) {
+      const demoUsers = [
+        ['Alice Johnson', 'alice@example.com', '+1-555-0101', 'admin'],
+        ['Bob Smith', 'bob@example.com', '+1-555-0102', 'manager'],
+        ['Carol Davis', 'carol@example.com', '+1-555-0103', 'editor'],
+        ['David Wilson', 'david@example.com', '+1-555-0104', 'viewer'],
+      ];
+      for (const [n, e, p, r] of demoUsers) {
+        const h = await bcrypt.hash('password123', 10);
+        await db.query('INSERT INTO users (name, email, phone, password, role) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (email) DO NOTHING', [n, e, p, h, r]);
+      }
+      console.log('Added demo users');
     }
 
     const existingProducts = await db.query('SELECT COUNT(*)::int AS count FROM products');

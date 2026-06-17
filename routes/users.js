@@ -1,6 +1,5 @@
 const express = require('express');
 const db = require('../db');
-const devDb = require('../services/dev-db');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -9,21 +8,21 @@ router.get('/all-users', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 10, keyword = '' } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
-    let countSQL = 'SELECT COUNT(*) as cnt FROM users';
-    let dataSQL = 'SELECT UserID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat FROM users';
+    let countSQL = 'SELECT COUNT(*)::int as cnt FROM users';
+    let dataSQL = 'SELECT id, name, email, phone, role, createdat FROM users';
     const countParams = [];
     if (keyword) {
-      const clause = ' WHERE (FullName ILIKE $1 OR Email ILIKE $1)';
+      const clause = ' WHERE (name ILIKE $1 OR email ILIKE $1)';
       countSQL += clause;
       dataSQL += clause;
       countParams.push(`%${keyword}%`);
     }
-    const countResult = await devDb.query(countSQL, countParams);
+    const countResult = await db.query(countSQL, countParams);
     const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].cnt) : 0;
     const hasKW = !!keyword;
     const dataParams = hasKW ? [`%${keyword}%`, parseInt(limit), offset] : [parseInt(limit), offset];
-    dataSQL += ' ORDER BY CreatedAt DESC LIMIT $' + (hasKW ? 2 : 1) + ' OFFSET $' + (hasKW ? 3 : 2);
-    const result = await devDb.query(dataSQL, dataParams);
+    dataSQL += ' ORDER BY createdat DESC LIMIT $' + (hasKW ? 2 : 1) + ' OFFSET $' + (hasKW ? 3 : 2);
+    const result = await db.query(dataSQL, dataParams);
     res.json({ success: true, data: result.rows, total, page: parseInt(page), limit: parseInt(limit) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -46,7 +45,7 @@ router.get('/listings-by-user/:id', authenticateToken, async (req, res) => {
 router.patch('/users/:id/account-state', authenticateToken, async (req, res) => {
   try {
     const { isActive } = req.body;
-    await devDb.query('UPDATE users SET isactive = $1, updatedat = CURRENT_TIMESTAMP WHERE id = $2', [isActive, req.params.id]);
+    await db.query('UPDATE users SET isactive = $1, updatedat = CURRENT_TIMESTAMP WHERE id = $2', [isActive, req.params.id]);
     res.json({ success: true, message: 'User status updated' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
