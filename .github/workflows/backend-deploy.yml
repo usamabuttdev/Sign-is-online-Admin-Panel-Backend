@@ -32,10 +32,10 @@ jobs:
         run: |
           cd /home/ec2-user/Storefront-Admin-Panel-Backend
           NODE_BIN=$(which node)
-          sudo systemctl stop backend 2>/dev/null || true
-          sudo systemctl kill backend 2>/dev/null || true
-          sudo systemctl reset-failed backend 2>/dev/null || true
-          sudo systemd-run --unit=backend \
+          sudo systemctl stop storefront-backend 2>/dev/null || true
+          sudo systemctl kill storefront-backend 2>/dev/null || true
+          sudo systemctl reset-failed storefront-backend 2>/dev/null || true
+          sudo systemd-run --unit=storefront-backend \
             --working-directory=/home/ec2-user/Storefront-Admin-Panel-Backend \
             --setenv=PORT=5000 \
             ${NODE_BIN} app.js
@@ -43,7 +43,7 @@ jobs:
       - name: Health check
         run: |
           sleep 5
-          curl --fail http://localhost:5000 || (sudo journalctl -u backend --no-pager -n 50 && exit 1)
+          curl --fail http://localhost:5000 || (sudo journalctl -u storefront-backend --no-pager -n 50 && exit 1)
 
       - name: Diagnose admin API
         run: |
