@@ -10,10 +10,10 @@ router.get('/all-users', authenticateToken, async (req, res) => {
     const { page = 1, limit = 10, keyword = '' } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     let countSQL = 'SELECT COUNT(*) as cnt FROM users';
-    let dataSQL = 'SELECT id, name, email, phone, role, createdat FROM users';
+    let dataSQL = 'SELECT UserID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat FROM users';
     const countParams = [];
     if (keyword) {
-      const clause = ' WHERE (name ILIKE $1 OR email ILIKE $1)';
+      const clause = ' WHERE (FullName ILIKE $1 OR Email ILIKE $1)';
       countSQL += clause;
       dataSQL += clause;
       countParams.push(`%${keyword}%`);
@@ -22,7 +22,7 @@ router.get('/all-users', authenticateToken, async (req, res) => {
     const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].cnt) : 0;
     const hasKW = !!keyword;
     const dataParams = hasKW ? [`%${keyword}%`, parseInt(limit), offset] : [parseInt(limit), offset];
-    dataSQL += ' ORDER BY createdat DESC LIMIT $' + (hasKW ? 2 : 1) + ' OFFSET $' + (hasKW ? 3 : 2);
+    dataSQL += ' ORDER BY CreatedAt DESC LIMIT $' + (hasKW ? 2 : 1) + ' OFFSET $' + (hasKW ? 3 : 2);
     const result = await devDb.query(dataSQL, dataParams);
     res.json({ success: true, data: result.rows, total, page: parseInt(page), limit: parseInt(limit) });
   } catch (err) {
