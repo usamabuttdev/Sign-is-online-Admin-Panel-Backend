@@ -25,6 +25,8 @@ app.use('/admin', adminRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/admin', require('./routes/customers'));
 app.use('/api/admin', require('./routes/accounts'));
+app.use('/api/admin', require('./routes/charges'));
+app.use('/api/admin', require('./routes/locations'));
 
 app.use('/specializations', require('./routes/specializations'));
 app.use('/training-modes', require('./routes/trainingModes'));
