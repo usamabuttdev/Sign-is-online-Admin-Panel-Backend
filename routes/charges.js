@@ -25,6 +25,7 @@ router.get('/charges', authenticateToken, async (req, res) => {
     const listQuery = `
       SELECT
         c.CHA_ID AS id,
+        c.CHA_ACC_ID AS account_id,
         ISNULL(acc.ACC_TITLE, '') AS account,
         c.CHA_AMOUNT AS amount,
         ISNULL(c.CHA_METHOD, '') AS method,
@@ -54,6 +55,7 @@ router.get('/charges/:id', authenticateToken, async (req, res) => {
     const result = await devDb.query(
       `SELECT
         c.CHA_ID AS id,
+        c.CHA_ACC_ID AS account_id,
         ISNULL(acc.ACC_TITLE, '') AS account,
         c.CHA_AMOUNT AS amount,
         ISNULL(c.CHA_METHOD, '') AS method,

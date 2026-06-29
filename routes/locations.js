@@ -25,6 +25,7 @@ router.get('/locations', authenticateToken, async (req, res) => {
     const listQuery = `
       SELECT
         l.LOC_ID AS id,
+        l.LOC_ACC_ID AS account_id,
         l.LOC_TITLE AS title,
         ISNULL(acc.ACC_TITLE, '') AS account,
         CASE WHEN l.LOC_AUTHENTICATED = 'Y' THEN 'Yes' ELSE 'No' END AS authenticated,
@@ -72,6 +73,7 @@ router.get('/locations/:id', authenticateToken, async (req, res) => {
     const result = await devDb.query(
       `SELECT
         l.LOC_ID AS id,
+        l.LOC_ACC_ID AS account_id,
         l.LOC_TITLE AS title,
         ISNULL(acc.ACC_TITLE, '') AS account,
         CASE WHEN l.LOC_AUTHENTICATED = 'Y' THEN 'Yes' ELSE 'No' END AS authenticated,
