@@ -24,6 +24,7 @@ const adminRouter = require('./routes/admin');
 app.use('/admin', adminRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/admin', require('./routes/customers'));
+app.use('/api/admin', require('./routes/accounts'));
 
 app.use('/specializations', require('./routes/specializations'));
 app.use('/training-modes', require('./routes/trainingModes'));
