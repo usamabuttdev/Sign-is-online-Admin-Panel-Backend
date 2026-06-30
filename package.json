@@ -10,6 +10,7 @@
     "seed:products": "node seed-products.js",
     "seed:metrics": "node seed-metrics.js",
     "seed:scripts": "node seed-scripts.js",
+    "seed:devices": "node seed-devices.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
