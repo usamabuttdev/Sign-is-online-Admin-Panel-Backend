@@ -18,8 +18,8 @@ const platforms = [
 async function seedPlatforms() {
   try {
     // Ensure PLA_TITLE column is wide enough for real platform names
-    await devDb.query(`ALTER TABLE PLATFORM ALTER COLUMN PLA_TITLE VARCHAR(100) NOT NULL`);
-    console.log('Ensured PLA_TITLE column is VARCHAR(100)');
+    await devDb.query(`ALTER TABLE PLATFORM ALTER COLUMN PLA_TITLE NVARCHAR(40) NOT NULL`);
+    console.log('Ensured PLA_TITLE column is NVARCHAR(40)');
 
     for (const p of platforms) {
       const existing = await devDb.query(
