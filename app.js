@@ -30,6 +30,7 @@ app.use('/api/admin', require('./routes/locations'));
 app.use('/api/admin', require('./routes/platforms'));
 app.use('/api/admin', require('./routes/admin-products'));
 app.use('/api/admin', require('./routes/metrics'));
+app.use('/api/admin', require('./routes/scripts'));
 
 app.use('/specializations', require('./routes/specializations'));
 app.use('/training-modes', require('./routes/trainingModes'));
