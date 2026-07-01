@@ -2,6 +2,7 @@ const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
 const initializeSchema = require('./schema');
+const initializeContentSchema = require('./services/content-schema');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +24,7 @@ app.use('/bookings', bookingsPublic);
 const adminRouter = require('./routes/admin');
 app.use('/admin', adminRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/admin', require('./routes/content'));
 app.use('/api/admin', require('./routes/customers'));
 app.use('/api/admin', require('./routes/accounts'));
 app.use('/api/admin', require('./routes/charges'));
@@ -33,6 +35,7 @@ app.use('/api/admin', require('./routes/metrics'));
 app.use('/api/admin', require('./routes/scripts'));
 app.use('/api/admin', require('./routes/devices'));
 app.use('/api/admin', require('./routes/history'));
+app.use('/api/admin', require('./routes/apis'));
 
 app.use('/specializations', require('./routes/specializations'));
 app.use('/training-modes', require('./routes/trainingModes'));
@@ -97,6 +100,11 @@ async function start() {
     await initializeSchema();
   } catch (err) {
     console.warn('Local database schema init skipped (dev API in use):', err.message);
+  }
+  try {
+    await initializeContentSchema();
+  } catch (err) {
+    console.warn('MSSQL CONTENT schema init failed:', err.message);
   }
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
