@@ -40,9 +40,9 @@ router.get('/all', authenticateToken, async (req, res) => {
 
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { question, answer } = req.body;
+    const { question, answer, isActive } = req.body;
     if (!question || !answer) return res.status(400).json({ success: false, message: 'Question and answer required' });
-    const result = await db.query('INSERT INTO faqs (question, answer) VALUES ($1, $2) RETURNING *', [question, answer]);
+    const result = await db.query('INSERT INTO faqs (question, answer, isactive) VALUES ($1, $2, $3) RETURNING *', [question, answer, isActive !== undefined ? isActive : true]);
     res.status(201).json({ success: true, data: result.rows[0] });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
