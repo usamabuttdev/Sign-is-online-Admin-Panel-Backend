@@ -25,7 +25,8 @@ router.get('/history', authenticateToken, async (req, res) => {
     const listQuery = `
       SELECT
         h.HIS_ID AS id,
-        COALESCE(acc.ACC_TITLE, loc.LOC_TITLE, usr.FullName, sig_acc.ACC_TITLE, pla.PLA_TITLE, dev.HardwareID, dev.DeviceID, '') AS object,
+        COALESCE(acc.ACC_TITLE, loc.LOC_TITLE, sig_acc.ACC_TITLE, pla.PLA_TITLE, dev.HardwareID, dev.DeviceID, '') AS object,
+        usr.FullName AS user,
         h.HIS_MESSAGE AS message,
         h.HIS_DATE_INSERTED AS date
       FROM HISTORY h

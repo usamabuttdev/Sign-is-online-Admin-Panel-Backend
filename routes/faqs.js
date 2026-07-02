@@ -4,6 +4,18 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
+function mapRow(row) {
+  if (!row) return null;
+  return {
+    id: row.FAQ_ID,
+    question: row.FAQ_QUESTION_TEXT,
+    answer: row.FAQ_ANSWER_TEXT,
+    public: row.FAQ_STATUS === 'A' ? 1 : 0,
+    createdAt: row.FAQ_DATE_INSERTED,
+    updatedAt: row.FAQ_DATE_UPDATED,
+  };
+}
+
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 10, keyword = '', isActive } = req.query;
@@ -11,11 +23,11 @@ router.get('/', authenticateToken, async (req, res) => {
     let where = 'WHERE 1=1';
     const params = [];
     let idx = 1;
-    if (keyword) { where += ` AND (question ILIKE $${idx++} OR answer ILIKE $${idx++}`; params.push(`%${keyword}%`, `%${keyword}%`); }
-    if (isActive !== undefined && isActive !== '') { where += ` AND isactive = $${idx++}`; params.push(isActive === 'true'); }
-    const countResult = await db.query(`SELECT COUNT(*) FROM faqs ${where}`, params);
-    const result = await db.query(`SELECT * FROM faqs ${where} ORDER BY id DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, parseInt(limit), offset]);
-    res.json({ success: true, data: result.rows, total: parseInt(countResult.rows[0].count), page: parseInt(page) });
+    if (keyword) { where += ` AND (FAQ_QUESTION_TEXT ILIKE $${idx++} OR FAQ_ANSWER_TEXT ILIKE $${idx++}`; params.push(`%${keyword}%`, `%${keyword}%`); }
+    if (isActive !== undefined && isActive !== '') { where += ` AND FAQ_STATUS = $${idx++}`; params.push(isActive === 'true' ? 'A' : 'I'); }
+    const countResult = await db.query(`SELECT COUNT(*) AS cnt FROM FREQUENTLY_ASKED_QUESTION ${where}`, params);
+    const result = await db.query(`SELECT FAQ_ID, FAQ_QUESTION_TEXT, FAQ_ANSWER_TEXT, FAQ_STATUS, FAQ_DATE_INSERTED, FAQ_DATE_UPDATED FROM FREQUENTLY_ASKED_QUESTION ${where} ORDER BY FAQ_ID DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, parseInt(limit), offset]);
+    res.json({ success: true, data: result.rows.map(mapRow), total: parseInt(countResult.rows[0].cnt), page: parseInt(page) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -28,11 +40,11 @@ router.get('/all', authenticateToken, async (req, res) => {
     let where = 'WHERE 1=1';
     const params = [];
     let idx = 1;
-    if (keyword) { where += ` AND (question ILIKE $${idx++} OR answer ILIKE $${idx++}`; params.push(`%${keyword}%`, `%${keyword}%`); }
-    if (isActive !== undefined && isActive !== '') { where += ` AND isactive = $${idx++}`; params.push(isActive === 'true'); }
-    const countResult = await db.query(`SELECT COUNT(*) FROM faqs ${where}`, params);
-    const result = await db.query(`SELECT * FROM faqs ${where} ORDER BY id DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, parseInt(limit), offset]);
-    res.json({ success: true, data: result.rows, total: parseInt(countResult.rows[0].count), page: parseInt(page) });
+    if (keyword) { where += ` AND (FAQ_QUESTION_TEXT ILIKE $${idx++} OR FAQ_ANSWER_TEXT ILIKE $${idx++}`; params.push(`%${keyword}%`, `%${keyword}%`); }
+    if (isActive !== undefined && isActive !== '') { where += ` AND FAQ_STATUS = $${idx++}`; params.push(isActive === 'true' ? 'A' : 'I'); }
+    const countResult = await db.query(`SELECT COUNT(*) AS cnt FROM FREQUENTLY_ASKED_QUESTION ${where}`, params);
+    const result = await db.query(`SELECT FAQ_ID, FAQ_QUESTION_TEXT, FAQ_ANSWER_TEXT, FAQ_STATUS, FAQ_DATE_INSERTED, FAQ_DATE_UPDATED FROM FREQUENTLY_ASKED_QUESTION ${where} ORDER BY FAQ_ID DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, parseInt(limit), offset]);
+    res.json({ success: true, data: result.rows.map(mapRow), total: parseInt(countResult.rows[0].cnt), page: parseInt(page) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -42,8 +54,9 @@ router.post('/', authenticateToken, async (req, res) => {
   try {
     const { question, answer, isActive } = req.body;
     if (!question || !answer) return res.status(400).json({ success: false, message: 'Question and answer required' });
-    const result = await db.query('INSERT INTO faqs (question, answer, isactive) VALUES ($1, $2, $3) RETURNING *', [question, answer, isActive !== undefined ? isActive : true]);
-    res.status(201).json({ success: true, data: result.rows[0] });
+    const status = isActive !== undefined ? (isActive ? 'A' : 'I') : 'A';
+    const result = await db.query('INSERT INTO FREQUENTLY_ASKED_QUESTION (FAQ_QUESTION_TEXT, FAQ_ANSWER_TEXT, FAQ_STATUS, FAQ_DATE_INSERTED, FAQ_DATE_UPDATED, FAQ_DATE_PUBLISHED) VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *', [question, answer, status]);
+    res.status(201).json({ success: true, data: mapRow(result.rows[0]) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -52,9 +65,11 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { question, answer, isActive } = req.body;
-    const result = await db.query('UPDATE faqs SET question = COALESCE($1, question), answer = COALESCE($2, answer), isactive = COALESCE($3, isactive), updatedat = CURRENT_TIMESTAMP WHERE id = $4 RETURNING *', [question, answer, isActive, req.params.id]);
+    const status = isActive !== undefined ? (isActive ? 'A' : 'I') : undefined;
+    const params = [question || null, answer || null, status || null, req.params.id];
+    const result = await db.query('UPDATE FREQUENTLY_ASKED_QUESTION SET FAQ_QUESTION_TEXT = COALESCE($1, FAQ_QUESTION_TEXT), FAQ_ANSWER_TEXT = COALESCE($2, FAQ_ANSWER_TEXT), FAQ_STATUS = COALESCE($3, FAQ_STATUS), FAQ_DATE_UPDATED = CURRENT_TIMESTAMP WHERE FAQ_ID = $4 RETURNING *', params);
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'FAQ not found' });
-    res.json({ success: true, data: result.rows[0] });
+    res.json({ success: true, data: mapRow(result.rows[0]) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -62,7 +77,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const result = await db.query('DELETE FROM faqs WHERE id = $1 RETURNING id', [req.params.id]);
+    const result = await db.query('DELETE FROM FREQUENTLY_ASKED_QUESTION WHERE FAQ_ID = $1 RETURNING FAQ_ID', [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'FAQ not found' });
     res.json({ success: true, message: 'FAQ deleted' });
   } catch (err) {

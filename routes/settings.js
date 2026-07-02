@@ -3,10 +3,22 @@ const db = require('../services/dev-db');
 
 const router = express.Router();
 
+function mapRow(row) {
+  if (!row) return null;
+  return {
+    id: row.FAQ_ID,
+    question: row.FAQ_QUESTION_TEXT,
+    answer: row.FAQ_ANSWER_TEXT,
+    public: row.FAQ_STATUS === 'A' ? 1 : 0,
+    createdAt: row.FAQ_DATE_INSERTED,
+    updatedAt: row.FAQ_DATE_UPDATED,
+  };
+}
+
 router.get('/faqs', async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM faqs WHERE isactive = true ORDER BY id DESC');
-    res.json({ success: true, data: result.rows });
+    const result = await db.query("SELECT FAQ_ID, FAQ_QUESTION_TEXT, FAQ_ANSWER_TEXT, FAQ_STATUS, FAQ_DATE_INSERTED, FAQ_DATE_UPDATED FROM FREQUENTLY_ASKED_QUESTION WHERE FAQ_STATUS = 'A' ORDER BY FAQ_ID DESC");
+    res.json({ success: true, data: result.rows.map(mapRow) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

@@ -29,6 +29,7 @@ app.use('/api/admin', require('./routes/customers'));
 app.use('/api/admin', require('./routes/accounts'));
 app.use('/api/admin', require('./routes/charges'));
 app.use('/api/admin', require('./routes/locations'));
+app.use('/api/admin', require('./routes/users'));
 app.use('/api/admin', require('./routes/platforms'));
 app.use('/api/admin', require('./routes/admin-products'));
 app.use('/api/admin', require('./routes/metrics'));
