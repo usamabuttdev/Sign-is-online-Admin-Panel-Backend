@@ -166,12 +166,17 @@ async function initializeSchema() {
   `;
 
   const statements = queries.split(';').filter(s => s.trim());
+  const errors = [];
   for (const stmt of statements) {
     try {
       await db.query(stmt);
     } catch (err) {
       console.error('Schema init error:', err.message);
+      errors.push(err);
     }
+  }
+  if (errors.length > 0) {
+    throw new AggregateError(errors, `Schema initialization failed for ${errors.length} statement(s): ${errors.map(e => e.message).join('; ')}`);
   }
 
   try {
