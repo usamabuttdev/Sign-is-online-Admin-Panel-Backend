@@ -13,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/auth'));
 app.use('/admin', require('./routes/users'));
 app.use('/admin', require('./routes/dashboard'));
 app.use('/admin/faqs', require('./routes/faqs'));
