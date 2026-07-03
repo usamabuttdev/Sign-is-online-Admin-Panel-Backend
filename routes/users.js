@@ -1,6 +1,5 @@
 const express = require('express');
 const db = require('../db');
-const devDb = require('../services/dev-db');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -18,12 +17,12 @@ router.get('/all-users', authenticateToken, async (req, res) => {
       dataSQL += clause;
       countParams.push(`%${keyword}%`);
     }
-    const countResult = await devDb.query(countSQL, countParams);
+    const countResult = await db.query(countSQL, countParams);
     const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].cnt) : 0;
     const hasKW = !!keyword;
     const dataParams = hasKW ? [`%${keyword}%`, parseInt(limit), offset] : [parseInt(limit), offset];
     dataSQL += ' ORDER BY CreatedAt DESC LIMIT $' + (hasKW ? 2 : 1) + ' OFFSET $' + (hasKW ? 3 : 2);
-    const result = await devDb.query(dataSQL, dataParams);
+    const result = await db.query(dataSQL, dataParams);
     res.json({ success: true, data: result.rows, total, page: parseInt(page), limit: parseInt(limit) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -46,7 +45,7 @@ router.get('/listings-by-user/:id', authenticateToken, async (req, res) => {
 router.patch('/users/:id/account-state', authenticateToken, async (req, res) => {
   try {
     const { isActive } = req.body;
-    await devDb.query('UPDATE users SET isactive = $1, updatedat = CURRENT_TIMESTAMP WHERE id = $2', [isActive, req.params.id]);
+    await db.query('UPDATE users SET isactive = $1, updatedat = CURRENT_TIMESTAMP WHERE id = $2', [isActive, req.params.id]);
     res.json({ success: true, message: 'User status updated' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -121,7 +120,7 @@ router.patch('/documents/:id/status', authenticateToken, async (req, res) => {
 
 router.get('/user/profile/:id', authenticateToken, async (req, res) => {
   try {
-    const result = await devDb.query(
+    const result = await db.query(
       'SELECT USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as created_at FROM users WHERE USR_ID = @p1',
       [req.params.id]
     );
@@ -141,7 +140,7 @@ router.get('/user/:id/locations', authenticateToken, async (req, res) => {
     let lastError = null;
     for (const tbl of tableNames) {
       try {
-        result = await devDb.query(
+        result = await db.query(
           `SELECT l.LOC_ID as id, l.LOC_TITLE as title, ulm.ULM_DATE_INSERTED as added
            FROM ${tbl} ulm
            INNER JOIN LOCATION l ON l.LOC_ID = ulm.ULM_LOC_ID

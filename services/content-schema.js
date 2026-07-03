@@ -1,4 +1,4 @@
-const db = require('./dev-db');
+const db = require('../db');
 
 async function initializeContentSchema() {
   try {

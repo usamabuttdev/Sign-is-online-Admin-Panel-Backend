@@ -10,12 +10,13 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password required' });
 
-    // Hardcoded admin credentials
-    if (email === 'nicowens@gmail.com' && password === '0255') {
-      const accessToken = generateToken({ id: 1, email: 'nicowens@gmail.com', role: 'admin' });
+    const adminEmail = process.env.ADMIN_EMAIL || 'nicowens@gmail.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || '0255';
+    if (email === adminEmail && password === adminPassword) {
+      const accessToken = generateToken({ id: 1, email: adminEmail, role: 'admin' });
       return res.json({
         success: true,
-        data: { accessToken, user: { id: 1, name: 'Admin', email: 'nicowens@gmail.com', role: 'admin' } }
+        data: { accessToken, user: { id: 1, name: 'Admin', email: adminEmail, role: 'admin' } }
       });
     }
 
