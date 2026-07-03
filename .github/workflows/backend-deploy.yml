@@ -4,11 +4,9 @@ on:
     branches:
       - main
   workflow_dispatch:
-
 concurrency:
   group: backend-deploy-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   deploy:
     name: Deploy to EC2
@@ -17,7 +15,8 @@ jobs:
       - name: Pull latest code
         run: |
           cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
-          git pull origin main
+          git fetch origin main
+          git reset --hard origin/main
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -28,22 +27,16 @@ jobs:
         working-directory: /home/ec2-user/Sign-is-online-Admin-Panel-Backend
         run: npm install
 
-      - name: Start backend via systemd-run
+      - name: Deploy with pm2
+        working-directory: /home/ec2-user/Sign-is-online-Admin-Panel-Backend
         run: |
-          cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
-          NODE_BIN=$(which node)
-          sudo systemctl stop backend 2>/dev/null || true
-          sudo systemctl kill backend 2>/dev/null || true
-          sudo systemctl reset-failed backend 2>/dev/null || true
-          sudo systemd-run --unit=backend \
-            --working-directory=/home/ec2-user/Sign-is-online-Admin-Panel-Backend \
-            --setenv=PORT=5000 \
-            ${NODE_BIN} app.js
+          pm2 restart ecosystem.config.js --update-env || pm2 start ecosystem.config.js
+          pm2 save
 
       - name: Health check
         run: |
           sleep 5
-          curl --fail http://localhost:5000 || (sudo journalctl -u backend --no-pager -n 50 && exit 1)
+          curl --fail http://localhost:5000/health || (pm2 logs backend --lines 50 --nostream && exit 1)
 
       - name: Diagnose admin API
         run: |
@@ -54,9 +47,6 @@ jobs:
           echo "=== First 500 bytes ==="
           cat /tmp/admin-test.json | head -c 500
           echo ""
-          echo "=== File type ==="
-          file /tmp/admin-test.json 2>/dev/null || echo "file command not available"
-          echo "=== Done ==="
 
       - name: Diagnose without auth
         run: |
