@@ -129,4 +129,44 @@ router.get('/scripts/:id/logs', authenticateToken, async (req, res) => {
   }
 });
 
+router.post('/scripts', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, run_frequency, server_name, email_address, check_frequency, check_range, track_counts } = req.body;
+    if (!title) return res.status(400).json({ success: false, message: 'Title required' });
+    const result = await devDb.query(
+      `INSERT INTO SCRIPT (SCR_TITLE, SCR_DESCRIPTION, SCR_RUN_FREQUENCY, SCR_SERVER_NAME, SCR_EMAIL_ADDRESS, SCR_CHECK_FREQUENCY, SCR_CHECK_RANGE, SCR_TRACK_COUNTS, SCR_STATUS, SCR_DATE_INSERTED)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'A', CURRENT_TIMESTAMP) RETURNING SCR_ID AS id, SCR_TITLE AS title`,
+      [title, description || null, run_frequency || null, server_name || null, email_address || null, check_frequency || null, check_range || null, track_counts || null]
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.put('/scripts/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, run_frequency, server_name, email_address, check_frequency, check_range, track_counts, status } = req.body;
+    const result = await devDb.query(
+      `UPDATE SCRIPT SET
+        SCR_TITLE = COALESCE($1, SCR_TITLE),
+        SCR_DESCRIPTION = COALESCE($2, SCR_DESCRIPTION),
+        SCR_RUN_FREQUENCY = COALESCE($3, SCR_RUN_FREQUENCY),
+        SCR_SERVER_NAME = COALESCE($4, SCR_SERVER_NAME),
+        SCR_EMAIL_ADDRESS = COALESCE($5, SCR_EMAIL_ADDRESS),
+        SCR_CHECK_FREQUENCY = COALESCE($6, SCR_CHECK_FREQUENCY),
+        SCR_CHECK_RANGE = COALESCE($7, SCR_CHECK_RANGE),
+        SCR_TRACK_COUNTS = COALESCE($8, SCR_TRACK_COUNTS),
+        SCR_STATUS = COALESCE($9, SCR_STATUS)
+       WHERE SCR_ID = $10
+       RETURNING SCR_ID AS id, SCR_TITLE AS title`,
+      [title || null, description || null, run_frequency || null, server_name || null, email_address || null, check_frequency || null, check_range || null, track_counts !== undefined ? track_counts : null, status || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Script not found' });
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

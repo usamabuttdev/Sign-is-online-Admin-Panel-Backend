@@ -127,4 +127,43 @@ router.get('/metrics/:id/values', authenticateToken, async (req, res) => {
   }
 });
 
+router.post('/metrics', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, query, frequency, goal, units, direction } = req.body;
+    if (!title) return res.status(400).json({ success: false, message: 'Title required' });
+    const result = await devDb.query(
+      `INSERT INTO METRIC (MET_TITLE, MET_DESCRIPTION, MET_QUERY, MET_RUN_FREQUENCY, MET_GOAL, MET_UNITS, MET_DIRECTION, MET_STATUS, MET_DATE_INSERTED)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'A', CURRENT_TIMESTAMP) RETURNING MET_ID AS id, MET_TITLE AS title`,
+      [title, description || null, query || null, frequency || null, goal || null, units || null, direction || null]
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.put('/metrics/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, query, frequency, goal, units, direction, status } = req.body;
+    const result = await devDb.query(
+      `UPDATE METRIC SET
+        MET_TITLE = COALESCE($1, MET_TITLE),
+        MET_DESCRIPTION = COALESCE($2, MET_DESCRIPTION),
+        MET_QUERY = COALESCE($3, MET_QUERY),
+        MET_RUN_FREQUENCY = COALESCE($4, MET_RUN_FREQUENCY),
+        MET_GOAL = COALESCE($5, MET_GOAL),
+        MET_UNITS = COALESCE($6, MET_UNITS),
+        MET_DIRECTION = COALESCE($7, MET_DIRECTION),
+        MET_STATUS = COALESCE($8, MET_STATUS)
+       WHERE MET_ID = $9
+       RETURNING MET_ID AS id, MET_TITLE AS title`,
+      [title || null, description || null, query || null, frequency || null, goal || null, units || null, direction || null, status || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Metric not found' });
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

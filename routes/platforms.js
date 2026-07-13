@@ -81,4 +81,35 @@ router.get('/platforms/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.post('/platforms', authenticateToken, async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title) return res.status(400).json({ success: false, message: 'Title required' });
+    const result = await devDb.query(
+      `INSERT INTO PLATFORM (PLA_TITLE, PLA_STATUS, PLA_DATE_INSERTED)
+       VALUES ($1, 'A', CURRENT_TIMESTAMP) RETURNING PLA_ID AS id, PLA_TITLE AS title`,
+      [title]
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.put('/platforms/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, status } = req.body;
+    if (!title) return res.status(400).json({ success: false, message: 'Title required' });
+    const platStatus = status !== undefined ? (status === 'A' || status === true ? 'A' : 'I') : undefined;
+    const result = await devDb.query(
+      `UPDATE PLATFORM SET PLA_TITLE = COALESCE($1, PLA_TITLE), PLA_STATUS = COALESCE($2, PLA_STATUS) WHERE PLA_ID = $3 RETURNING PLA_ID AS id, PLA_TITLE AS title`,
+      [title || null, platStatus || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Platform not found' });
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

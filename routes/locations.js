@@ -110,4 +110,45 @@ router.get('/locations/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.post('/locations', authenticateToken, async (req, res) => {
+  try {
+    const { account_id, title, city, state, product_id, authenticated, has_active_subscription } = req.body;
+    if (!account_id || !title) return res.status(400).json({ success: false, message: 'Account ID and title required' });
+    const result = await devDb.query(
+      `INSERT INTO LOCATION (LOC_ACC_ID, LOC_TITLE, LOC_CITY, LOC_SP_ABBREV, LOC_PRO_ID, LOC_AUTHENTICATED, LOC_HAS_ACTIVE_SUBSCRIPTION, LOC_STATUS, LOC_DATE_INSERTED)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'A', CURRENT_TIMESTAMP) RETURNING LOC_ID AS id, LOC_TITLE AS title`,
+      [account_id, title, city || null, state || null, product_id || null, authenticated ? 'Y' : 'N', has_active_subscription ? 'Y' : 'N']
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.put('/locations/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, city, state, product_id, authenticated, has_active_subscription, status } = req.body;
+    const result = await devDb.query(
+      `UPDATE LOCATION SET
+        LOC_TITLE = COALESCE($1, LOC_TITLE),
+        LOC_CITY = COALESCE($2, LOC_CITY),
+        LOC_SP_ABBREV = COALESCE($3, LOC_SP_ABBREV),
+        LOC_PRO_ID = COALESCE($4, LOC_PRO_ID),
+        LOC_AUTHENTICATED = COALESCE($5, LOC_AUTHENTICATED),
+        LOC_HAS_ACTIVE_SUBSCRIPTION = COALESCE($6, LOC_HAS_ACTIVE_SUBSCRIPTION),
+        LOC_STATUS = COALESCE($7, LOC_STATUS)
+       WHERE LOC_ID = $8
+       RETURNING LOC_ID AS id, LOC_TITLE AS title`,
+      [title || null, city || null, state || null, product_id || null,
+       authenticated !== undefined ? (authenticated ? 'Y' : 'N') : null,
+       has_active_subscription !== undefined ? (has_active_subscription ? 'Y' : 'N') : null,
+       status || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Location not found' });
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

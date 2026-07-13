@@ -125,4 +125,39 @@ router.get('/accounts/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.post('/accounts', authenticateToken, async (req, res) => {
+  try {
+    const { title, timezone_id, observes_daylight } = req.body;
+    if (!title) return res.status(400).json({ success: false, message: 'Title required' });
+    const result = await devDb.query(
+      `INSERT INTO ACCOUNT (ACC_TITLE, ACC_TZ_ID, ACC_OBSERVES_DAYLIGHT, ACC_STATUS, ACC_DATE_INSERTED)
+       VALUES ($1, $2, $3, 'A', CURRENT_TIMESTAMP) RETURNING ACC_ID AS id, ACC_TITLE AS title`,
+      [title, timezone_id || null, observes_daylight ? 'Y' : 'N']
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.put('/accounts/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, timezone_id, observes_daylight, status } = req.body;
+    const result = await devDb.query(
+      `UPDATE ACCOUNT SET
+        ACC_TITLE = COALESCE($1, ACC_TITLE),
+        ACC_TZ_ID = COALESCE($2, ACC_TZ_ID),
+        ACC_OBSERVES_DAYLIGHT = COALESCE($3, ACC_OBSERVES_DAYLIGHT),
+        ACC_STATUS = COALESCE($4, ACC_STATUS)
+       WHERE ACC_ID = $5
+       RETURNING ACC_ID AS id, ACC_TITLE AS title`,
+      [title || null, timezone_id || null, observes_daylight !== undefined ? (observes_daylight ? 'Y' : 'N') : null, status || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Account not found' });
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

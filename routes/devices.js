@@ -51,4 +51,40 @@ router.get('/devices', authenticateToken, async (req, res) => {
   }
 });
 
+router.post('/devices', authenticateToken, async (req, res) => {
+  try {
+    const { device_id, location_id, hardware_type, firmware_version, status } = req.body;
+    if (!device_id) return res.status(400).json({ success: false, message: 'Device ID required' });
+    const result = await devDb.query(
+      `INSERT INTO DEVICES (device_id, location_id, hardware_type, firmware_version, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) RETURNING id, device_id`,
+      [device_id, location_id || null, hardware_type || null, firmware_version || null, status || 'active']
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.put('/devices/:id', authenticateToken, async (req, res) => {
+  try {
+    const { location_id, hardware_type, firmware_version, status, last_heartbeat } = req.body;
+    const result = await devDb.query(
+      `UPDATE DEVICES SET
+        location_id = COALESCE($1, location_id),
+        hardware_type = COALESCE($2, hardware_type),
+        firmware_version = COALESCE($3, firmware_version),
+        status = COALESCE($4, status),
+        last_heartbeat = COALESCE($5, last_heartbeat)
+       WHERE id = $6
+       RETURNING id, device_id`,
+      [location_id || null, hardware_type || null, firmware_version || null, status || null, last_heartbeat || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Device not found' });
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

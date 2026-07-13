@@ -75,4 +75,34 @@ router.get('/charges/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.post('/charges', authenticateToken, async (req, res) => {
+  try {
+    const { account_id, amount, method } = req.body;
+    if (!account_id || amount === undefined) return res.status(400).json({ success: false, message: 'Account ID and amount required' });
+    const result = await devDb.query(
+      `INSERT INTO CHARGE (CHA_ACC_ID, CHA_AMOUNT, CHA_METHOD, CHA_DATE_INSERTED)
+       VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING CHA_ID AS id, CHA_AMOUNT AS amount`,
+      [account_id, amount, method || null]
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.put('/charges/:id', authenticateToken, async (req, res) => {
+  try {
+    const { amount, method } = req.body;
+    if (amount === undefined) return res.status(400).json({ success: false, message: 'Amount required' });
+    const result = await devDb.query(
+      `UPDATE CHARGE SET CHA_AMOUNT = COALESCE($1, CHA_AMOUNT), CHA_METHOD = COALESCE($2, CHA_METHOD) WHERE CHA_ID = $3 RETURNING CHA_ID AS id, CHA_AMOUNT AS amount`,
+      [amount, method || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Charge not found' });
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

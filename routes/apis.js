@@ -64,4 +64,33 @@ router.get('/apis/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.post('/apis', authenticateToken, async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    if (!title) return res.status(400).json({ success: false, message: 'Title required' });
+    const result = await devDb.query(
+      `INSERT INTO API_ENDPOINTS (API_TITLE, API_DESCRIPTION, API_CREATED_AT)
+       VALUES ($1, $2, CURRENT_TIMESTAMP) RETURNING API_ID AS id, API_TITLE AS title`,
+      [title, description || null]
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.put('/apis/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const result = await devDb.query(
+      `UPDATE API_ENDPOINTS SET API_TITLE = COALESCE($1, API_TITLE), API_DESCRIPTION = COALESCE($2, API_DESCRIPTION) WHERE API_ID = $3 RETURNING API_ID AS id, API_TITLE AS title`,
+      [title || null, description || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'API not found' });
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;
