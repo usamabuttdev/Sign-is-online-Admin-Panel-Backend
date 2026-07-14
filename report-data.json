@@ -1,0 +1,186 @@
+[
+  {
+    "id": 1,
+    "title": "Revenue",
+    "query": "SELECT SUM(amount) FROM transactions",
+    "goal": 100000,
+    "units": "$",
+    "direction": "H",
+    "frequency": "M",
+    "description": "Total monthly revenue from all sources",
+    "currentValue": 78500,
+    "currentPct": 79,
+    "currentDate": "2026-06-28T00:00:00.000Z",
+    "previousValue": null,
+    "previousPct": null,
+    "pctChange": null,
+    "history": [
+      {
+        "date": "2026-06-28T00:00:00.000Z",
+        "value": 78500,
+        "pct": 79
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Active Users",
+    "query": "SELECT COUNT(DISTINCT user_id) FROM sessions",
+    "goal": 5000,
+    "units": "",
+    "direction": "H",
+    "frequency": "D",
+    "description": "Daily active users across all platforms",
+    "currentValue": 4200,
+    "currentPct": 84,
+    "currentDate": "2026-06-30T00:00:00.000Z",
+    "previousValue": null,
+    "previousPct": null,
+    "pctChange": null,
+    "history": [
+      {
+        "date": "2026-06-30T00:00:00.000Z",
+        "value": 4200,
+        "pct": 84
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Order Conversion",
+    "query": "SELECT (completed / total) * 100 FROM orders",
+    "goal": 75,
+    "units": "%",
+    "direction": "H",
+    "frequency": "D",
+    "description": "Percentage of visitors who complete an order",
+    "currentValue": 62,
+    "currentPct": 83,
+    "currentDate": "2026-06-30T00:00:00.000Z",
+    "previousValue": null,
+    "previousPct": null,
+    "pctChange": null,
+    "history": [
+      {
+        "date": "2026-06-30T00:00:00.000Z",
+        "value": 62,
+        "pct": 83
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Avg Response Time",
+    "query": "SELECT AVG(response_time) FROM support_tickets",
+    "goal": 24,
+    "units": "h",
+    "direction": "L",
+    "frequency": "D",
+    "description": "Average hours to first response on support tickets",
+    "currentValue": 18,
+    "currentPct": 75,
+    "currentDate": "2026-06-30T00:00:00.000Z",
+    "previousValue": null,
+    "previousPct": null,
+    "pctChange": null,
+    "history": [
+      {
+        "date": "2026-06-30T00:00:00.000Z",
+        "value": 18,
+        "pct": 75
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Customer Churn",
+    "query": "SELECT COUNT(*) FROM cancellations",
+    "goal": 5,
+    "units": "%",
+    "direction": "L",
+    "frequency": "M",
+    "description": "Monthly customer churn rate",
+    "currentValue": 4.2,
+    "currentPct": 84,
+    "currentDate": "2026-06-01T00:00:00.000Z",
+    "previousValue": null,
+    "previousPct": null,
+    "pctChange": null,
+    "history": [
+      {
+        "date": "2026-06-01T00:00:00.000Z",
+        "value": 4.2,
+        "pct": 84
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "NPS Score",
+    "query": "SELECT AVG(score) FROM surveys",
+    "goal": 70,
+    "units": "",
+    "direction": "H",
+    "frequency": "M",
+    "description": "Net Promoter Score from customer surveys",
+    "currentValue": 65,
+    "currentPct": 93,
+    "currentDate": "2026-05-31T00:00:00.000Z",
+    "previousValue": null,
+    "previousPct": null,
+    "pctChange": null,
+    "history": [
+      {
+        "date": "2026-05-31T00:00:00.000Z",
+        "value": 65,
+        "pct": 93
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Page Load Time",
+    "query": "SELECT AVG(load_time) FROM perf_metrics",
+    "goal": 2,
+    "units": "s",
+    "direction": "L",
+    "frequency": "D",
+    "description": "Average page load time in seconds",
+    "currentValue": 1.8,
+    "currentPct": 90,
+    "currentDate": "2026-06-30T00:00:00.000Z",
+    "previousValue": null,
+    "previousPct": null,
+    "pctChange": null,
+    "history": [
+      {
+        "date": "2026-06-30T00:00:00.000Z",
+        "value": 1.8,
+        "pct": 90
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "New Signups",
+    "query": "SELECT COUNT(*) FROM users",
+    "goal": 1000,
+    "units": "",
+    "direction": "H",
+    "frequency": "W",
+    "description": "Weekly new user signups",
+    "currentValue": 850,
+    "currentPct": 85,
+    "currentDate": "2026-06-29T00:00:00.000Z",
+    "previousValue": null,
+    "previousPct": null,
+    "pctChange": null,
+    "history": [
+      {
+        "date": "2026-06-29T00:00:00.000Z",
+        "value": 850,
+        "pct": 85
+      }
+    ]
+  }
+]
