@@ -5,6 +5,7 @@ const initializeSchema = require('./schema');
 const initializeContentSchema = require('./services/content-schema');
 
 const app = express();
+app.set('etag', false);
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
@@ -46,9 +47,16 @@ app.use('/settings', require('./routes/settings'));
 app.use('/transactions', require('./routes/transactions'));
 app.use('/upload', require('./routes/upload'));
 app.use('/communications', require('./routes/communications'));
-app.use('/products', require('./routes/productViews'));
-app.use('/products', require('./routes/productMetrics'));
-app.use('/products', require('./routes/products'));
+const noProductCache = (req, res, next) => {
+  res.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+};
+
+app.use('/products', noProductCache, require('./routes/productViews'));
+app.use('/products', noProductCache, require('./routes/productMetrics'));
+app.use('/products', noProductCache, require('./routes/products'));
 app.use('/sales', require('./routes/sales'));
 app.use('/trainers', require('./routes/trainers'));
 

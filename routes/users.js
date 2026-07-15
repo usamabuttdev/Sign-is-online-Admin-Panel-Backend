@@ -4,6 +4,67 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
+router.post('/users', authenticateToken, async (req, res) => {
+  try {
+    const { name, email, phone, role, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password required' });
+    }
+    const bcrypt = require('bcryptjs');
+    const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ success: false, message: 'User already exists' });
+    }
+    const hashed = await bcrypt.hash(password, 10);
+    const result = await db.query(
+      'INSERT INTO users (FullName, Email, Phone, Role, Password, CreatedAt, isactive) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, true) RETURNING USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat',
+      [name || '', email, phone || null, role || 'user', hashed]
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.put('/users/:id', authenticateToken, async (req, res) => {
+  try {
+    const { name, email, phone, role, password, isActive } = req.body;
+    const bcrypt = require('bcryptjs');
+    const fields = [];
+    const params = [];
+    let paramIdx = 1;
+
+    if (name !== undefined) { fields.push(`FullName = $${paramIdx++}`); params.push(name); }
+    if (email !== undefined) { fields.push(`Email = $${paramIdx++}`); params.push(email); }
+    if (phone !== undefined) { fields.push(`Phone = $${paramIdx++}`); params.push(phone); }
+    if (role !== undefined) { fields.push(`Role = $${paramIdx++}`); params.push(role); }
+    if (password !== undefined) {
+      const hashed = await bcrypt.hash(password, 10);
+      fields.push(`Password = $${paramIdx++}`);
+      params.push(hashed);
+    }
+    if (isActive !== undefined) { fields.push(`isactive = $${paramIdx++}`); params.push(isActive); }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ success: false, message: 'No fields to update' });
+    }
+
+    fields.push(`updatedat = CURRENT_TIMESTAMP`);
+    params.push(req.params.id);
+
+    const result = await db.query(
+      `UPDATE users SET ${fields.join(', ')} WHERE USR_ID = $${paramIdx} RETURNING USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat, isactive`,
+      params
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 router.get('/all-users', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 10, keyword = '' } = req.query;

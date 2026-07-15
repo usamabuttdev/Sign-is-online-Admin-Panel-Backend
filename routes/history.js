@@ -13,7 +13,7 @@ router.get('/history', authenticateToken, async (req, res) => {
     let where = '1=1';
     const params = [];
     if (search) {
-      where += ' AND (h.HIS_MESSAGE LIKE @p1)';
+      where += ' AND (h.HIS_MESSAGE LIKE $1)';
       params.push(`%${search}%`);
     }
 
@@ -21,6 +21,10 @@ router.get('/history', authenticateToken, async (req, res) => {
       `SELECT COUNT(*) AS cnt FROM HISTORY h WHERE ${where}`,
       params
     );
+
+    const limitParam = `$${params.length + 1}`;
+    const offsetParam = `$${params.length + 2}`;
+    const listParams = [...params, limit, offset];
 
     const listQuery = `
       SELECT
@@ -38,11 +42,10 @@ router.get('/history', authenticateToken, async (req, res) => {
       LEFT JOIN PLATFORM pla ON pla.PLA_ID = h.HIS_PLA_ID
       LEFT JOIN IOT_Devices dev ON dev.DeviceID = h.HIS_DEVICEID
       WHERE ${where}
-      ORDER BY h.HIS_DATE_INSERTED DESC
-      OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY
+      ORDER BY h.HIS_DATE_INSERTED DESC LIMIT ${limitParam} OFFSET ${offsetParam}
     `;
 
-    const result = await devDb.query(listQuery, params);
+    const result = await devDb.query(listQuery, listParams);
     res.json({
       success: true,
       data: result.rows,
