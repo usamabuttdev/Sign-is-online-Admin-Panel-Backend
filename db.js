@@ -94,8 +94,12 @@ function convertMssql(text) {
     const cols = returningMatch[1].trim();
     const isInsert = /^\s*INSERT\b/i.test(sqlText);
     const isDelete = /^\s*DELETE\b/i.test(sqlText);
-    const prefix = isDelete ? 'OUTPUT DELETED.' : 'OUTPUT INSERTED.';
-    const outputClause = `${prefix}${cols}`;
+    const qualifier = isDelete ? 'DELETED' : 'INSERTED';
+    const qualifiedCols = cols.split(',').map(c => {
+      c = c.trim();
+      return c.includes('.') ? c : `${qualifier}.${c}`;
+    }).join(', ');
+    const outputClause = `OUTPUT ${qualifiedCols}`;
 
     sqlText = sqlText.replace(returningRE, '');
 
