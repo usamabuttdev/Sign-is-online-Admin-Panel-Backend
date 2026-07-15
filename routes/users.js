@@ -11,7 +11,7 @@ router.post('/users', authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and password required' });
     }
     const bcrypt = require('bcryptjs');
-    const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    const existing = await db.query('SELECT USR_ID FROM users WHERE email = $1', [email]);
     if (existing.rows.length > 0) {
       return res.status(409).json({ success: false, message: 'User already exists' });
     }
@@ -106,7 +106,7 @@ router.get('/listings-by-user/:id', authenticateToken, async (req, res) => {
 router.patch('/users/:id/account-state', authenticateToken, async (req, res) => {
   try {
     const { isActive } = req.body;
-    await db.query('UPDATE users SET isactive = $1, updatedat = CURRENT_TIMESTAMP WHERE id = $2', [isActive, req.params.id]);
+    await db.query('UPDATE users SET isactive = $1, updatedat = CURRENT_TIMESTAMP WHERE USR_ID = $2', [isActive, req.params.id]);
     res.json({ success: true, message: 'User status updated' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
