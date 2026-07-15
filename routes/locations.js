@@ -149,8 +149,8 @@ router.post('/locations', authenticateToken, async (req, res) => {
   const { account_id, title, city, state, product_id, authenticated, has_active_subscription, auto_renew_subscription } = req.body;
   if (!account_id || !title) return res.status(400).json({ success: false, message: 'Account ID and title required' });
   const result = await devDb.query(
-    `INSERT INTO LOCATION (LOC_ACC_ID, LOC_TITLE, LOC_CITY, LOC_SP_ABBREV, LOC_PRO_ID, LOC_AUTHENTICATED, LOC_HAS_ACTIVE_SUBSCRIPTION, LOC_AUTO_RENEW_SUBSCRIPTION, LOC_STATUS, LOC_DATE_INSERTED)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'A', CURRENT_TIMESTAMP) RETURNING LOC_ID AS id, LOC_TITLE AS title`,
+    `INSERT INTO LOCATION (LOC_ACC_ID, LOC_TITLE, LOC_CITY, LOC_SP_ABBREV, LOC_PRO_ID, LOC_AUTHENTICATED, LOC_HAS_ACTIVE_SUBSCRIPTION, LOC_AUTO_RENEW_SUBSCRIPTION, LOC_STATUS, LOC_DATE_INSERTED, LOC_CURRENT_STATUS, LOC_COU_ABBREV, LOC_POSTAL_CODE, LOC_PRODUCT_PRICE_FIXED, LOC_DATE_UPDATED)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'A', CURRENT_TIMESTAMP, 'A', 'US', '00000', 'N', CURRENT_TIMESTAMP) RETURNING LOC_ID AS id, LOC_TITLE AS title`,
     [
       account_id,
       title,
