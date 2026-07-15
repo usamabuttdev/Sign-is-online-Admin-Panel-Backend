@@ -17,7 +17,7 @@ router.post('/users', authenticateToken, async (req, res) => {
     }
     const hashed = await bcrypt.hash(password, 10);
     const result = await db.query(
-      'INSERT INTO users (FullName, Email, Phone, Role, Password, CreatedAt, isactive) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, true) RETURNING USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat',
+      'INSERT INTO users (FullName, Email, Phone, Role, Password, CreatedAt, IsActive) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, true) RETURNING USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat',
       [name || '', email, phone || null, role || 'user', hashed]
     );
     res.status(201).json({ success: true, data: result.rows[0] });
@@ -43,17 +43,17 @@ router.put('/users/:id', authenticateToken, async (req, res) => {
       fields.push(`Password = $${paramIdx++}`);
       params.push(hashed);
     }
-    if (isActive !== undefined) { fields.push(`isactive = $${paramIdx++}`); params.push(isActive); }
+    if (isActive !== undefined) { fields.push(`IsActive = $${paramIdx++}`); params.push(isActive); }
 
     if (fields.length === 0) {
       return res.status(400).json({ success: false, message: 'No fields to update' });
     }
 
-    fields.push(`updatedat = CURRENT_TIMESTAMP`);
+    fields.push(`UpdatedAt = CURRENT_TIMESTAMP`);
     params.push(req.params.id);
 
     const result = await db.query(
-      `UPDATE users SET ${fields.join(', ')} WHERE USR_ID = $${paramIdx} RETURNING USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat, isactive`,
+      `UPDATE users SET ${fields.join(', ')} WHERE USR_ID = $${paramIdx} RETURNING USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat, IsActive as isactive`,
       params
     );
     if (result.rows.length === 0) {
@@ -106,7 +106,7 @@ router.get('/listings-by-user/:id', authenticateToken, async (req, res) => {
 router.patch('/users/:id/account-state', authenticateToken, async (req, res) => {
   try {
     const { isActive } = req.body;
-    await db.query('UPDATE users SET isactive = $1, updatedat = CURRENT_TIMESTAMP WHERE USR_ID = $2', [isActive, req.params.id]);
+    await db.query('UPDATE users SET IsActive = $1, UpdatedAt = CURRENT_TIMESTAMP WHERE USR_ID = $2', [isActive, req.params.id]);
     res.json({ success: true, message: 'User status updated' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
