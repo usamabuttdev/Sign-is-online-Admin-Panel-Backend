@@ -180,10 +180,27 @@ router.patch('/documents/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
+router.get('/users/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role,
+              IsActive as isactive, CreatedAt as createdat, UpdatedAt as updatedat
+       FROM users WHERE USR_ID = $1`,
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 router.get('/user/profile/:id', authenticateToken, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as created_at FROM users WHERE USR_ID = @p1',
+      'SELECT USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as created_at FROM users WHERE USR_ID = $1',
       [req.params.id]
     );
     if (result.rows.length === 0) {

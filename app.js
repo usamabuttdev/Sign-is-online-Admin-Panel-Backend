@@ -3,6 +3,7 @@ require('dotenv').config();
 const cors = require('cors');
 const initializeSchema = require('./schema');
 const initializeContentSchema = require('./services/content-schema');
+const initializeApiEndpointsSchema = require('./services/api-endpoints-schema');
 
 const app = express();
 app.set('etag', false);
@@ -105,6 +106,11 @@ async function start() {
     await initializeContentSchema();
   } catch (err) {
     console.warn('MSSQL CONTENT schema init failed:', err.message);
+  }
+  try {
+    await initializeApiEndpointsSchema();
+  } catch (err) {
+    console.warn('MSSQL API_ENDPOINTS schema init failed:', err.message);
   }
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

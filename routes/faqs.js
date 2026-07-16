@@ -55,7 +55,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const { question, answer, isActive } = req.body;
     if (!question || !answer) return res.status(400).json({ success: false, message: 'Question and answer required' });
     const status = isActive !== undefined ? (isActive ? 'A' : 'I') : 'A';
-    const result = await db.query('INSERT INTO FREQUENTLY_ASKED_QUESTION (FAQ_QUESTION_TEXT, FAQ_ANSWER_TEXT, FAQ_STATUS, FAQ_DATE_INSERTED, FAQ_DATE_UPDATED, FAQ_DATE_PUBLISHED) VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *', [question, answer, status]);
+    const result = await db.query('INSERT INTO FREQUENTLY_ASKED_QUESTION (FAQ_QUESTION_TEXT, FAQ_ANSWER_TEXT, FAQ_STATUS, FAQ_DATE_INSERTED, FAQ_DATE_UPDATED) VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *', [question, answer, status]);
     res.status(201).json({ success: true, data: mapRow(result.rows[0]) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
