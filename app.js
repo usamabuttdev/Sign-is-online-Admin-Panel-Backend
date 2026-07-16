@@ -32,6 +32,7 @@ app.use('/api/admin', require('./routes/accounts'));
 app.use('/api/admin', require('./routes/charges'));
 app.use('/api/admin', require('./routes/locations'));
 app.use('/api/admin', require('./routes/users'));
+app.use('/', require('./routes/users'));
 app.use('/api/admin', require('./routes/platforms'));
 app.use('/api/admin', require('./routes/admin-products'));
 app.use('/api/admin', require('./routes/metrics'));
@@ -57,6 +58,7 @@ const noProductCache = (req, res, next) => {
 app.use('/products', noProductCache, require('./routes/productViews'));
 app.use('/products', noProductCache, require('./routes/productMetrics'));
 app.use('/products', noProductCache, require('./routes/products'));
+app.use('/api/product', noProductCache, require('./routes/product'));
 app.use('/sales', require('./routes/sales'));
 app.use('/trainers', require('./routes/trainers'));
 
