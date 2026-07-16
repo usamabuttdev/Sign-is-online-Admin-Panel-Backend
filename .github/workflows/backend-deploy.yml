@@ -9,99 +9,67 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
-    name: Deploy to EC2 via SSH
-    runs-on: ubuntu-latest
+    name: Deploy to EC2
+    runs-on: sign-in-backend
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Pull latest code
+        run: |
+          cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
+          git fetch origin main
+          git reset --hard origin/main
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            cd /home/ec2-user/Sign-is-online-Admin-Panel-Backend
-            git fetch origin main
-            git reset --hard origin/main
-            npm ci
-            pm2 restart ecosystem.config.js --update-env || pm2 start ecosystem.config.js
-            pm2 save
+      - name: Install dependencies
+        working-directory: /home/ec2-user/Sign-is-online-Admin-Panel-Backend
+        run: npm install
+
+      - name: Deploy with pm2
+        working-directory: /home/ec2-user/Sign-is-online-Admin-Panel-Backend
+        run: |
+          pm2 restart ecosystem.config.js --update-env || pm2 start ecosystem.config.js
+          pm2 save
 
       - name: Health check
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            sleep 5
-            curl --fail http://localhost:5000/health || (pm2 logs backend --lines 50 --nostream && exit 1)
+        run: |
+          sleep 5
+          curl --fail http://localhost:5000/health || (pm2 logs backend --lines 50 --nostream && exit 1)
 
       - name: Diagnose admin API
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            echo "=== Admin API test ==="
-            curl -s -o /tmp/admin-test.json -w "HTTP_CODE:%{http_code}\nSIZE:%{size_download}\nCONTENT_TYPE:%{content_type}\n" \
-              -H "Authorization: Bearer 1234567890" \
-              "http://localhost:5000/admin/all-users?page=1&limit=10" || echo "CURL_EXIT_CODE:$?"
-            echo "=== First 500 bytes ==="
-            cat /tmp/admin-test.json | head -c 500
-            echo ""
+        run: |
+          echo "=== Admin API test ==="
+          curl -s -o /tmp/admin-test.json -w "HTTP_CODE:%{http_code}\nSIZE:%{size_download}\nCONTENT_TYPE:%{content_type}\n" \
+            -H "Authorization: Bearer 1234567890" \
+            "http://localhost:5000/admin/all-users?page=1&limit=10" || echo "CURL_EXIT_CODE:$?"
+          echo "=== First 500 bytes ==="
+          cat /tmp/admin-test.json | head -c 500
+          echo ""
 
       - name: Diagnose without auth
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            echo "=== No-auth test ==="
-            curl -s -o /tmp/noauth-test.json -w "HTTP_CODE:%{http_code}\nSIZE:%{size_download}\n" \
-              "http://localhost:5000/admin/all-users?page=1&limit=10" || echo "CURL_EXIT_CODE:$?"
-            cat /tmp/noauth-test.json | head -c 500
-            echo ""
+        run: |
+          echo "=== No-auth test ==="
+          curl -s -o /tmp/noauth-test.json -w "HTTP_CODE:%{http_code}\nSIZE:%{size_download}\n" \
+            "http://localhost:5000/admin/all-users?page=1&limit=10" || echo "CURL_EXIT_CODE:$?"
+          cat /tmp/noauth-test.json | head -c 500
+          echo ""
 
       - name: Diagnose health endpoint
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            echo "=== Health test ==="
-            curl -s -o /tmp/health-test.txt -w "HTTP_CODE:%{http_code}\n" \
-              "http://localhost:5000/health"
-            cat /tmp/health-test.txt
-            echo ""
+        run: |
+          echo "=== Health test ==="
+          curl -s -o /tmp/health-test.txt -w "HTTP_CODE:%{http_code}\n" \
+            "http://localhost:5000/health"
+          cat /tmp/health-test.txt
+          echo ""
 
       - name: Network diagnostics
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            echo "::notice::HOSTNAME=$(hostname)"
-            echo "::notice::PRIVATE_IP=$(hostname -I 2>/dev/null | awk '{print $1}')"
-            echo "::notice::PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || echo unknown)"
-            echo "::notice::BACKEND_PORT=$(ss -tlnp | grep 5000 || echo 'NOT_FOUND')"
+        run: |
+          echo "::notice::HOSTNAME=$(hostname)"
+          echo "::notice::PRIVATE_IP=$(hostname -I 2>/dev/null | awk '{print $1}')"
+          echo "::notice::PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || echo unknown)"
+          echo "::notice::BACKEND_PORT=$(ss -tlnp | grep 5000 || echo 'NOT_FOUND')"
 
       - name: Upload diagnostics
         if: always()
