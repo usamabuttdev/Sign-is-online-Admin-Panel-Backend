@@ -20,10 +20,6 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install dependencies
-        working-directory: /home/ec2-user/Sign-is-online-Admin-Panel-Backend
-        run: npm ci
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
