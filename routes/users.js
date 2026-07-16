@@ -18,7 +18,7 @@ router.post('/users', authenticateToken, async (req, res) => {
     const pw = password || require('crypto').randomBytes(16).toString('hex');
     const hashed = await bcrypt.hash(pw, 10);
     const result = await db.query(
-      'INSERT INTO users (FullName, Email, Phone, Role, Password, CreatedAt, IsActive) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, true) RETURNING USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat',
+      'INSERT INTO users (FullName, Email, Phone, Role, Password, CreatedAt) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) RETURNING USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat',
       [name || '', email, phoneNumber || phone || null, role || 'user', hashed]
     );
     res.status(201).json({ success: true, data: result.rows[0] });
