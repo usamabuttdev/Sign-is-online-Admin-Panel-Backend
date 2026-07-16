@@ -6,19 +6,20 @@ const router = express.Router();
 
 router.post('/users', authenticateToken, async (req, res) => {
   try {
-    const { name, email, phone, role, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password required' });
+    const { name, email, phoneNumber, phone, role, password } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email required' });
     }
     const bcrypt = require('bcryptjs');
     const existing = await db.query('SELECT USR_ID FROM users WHERE email = $1', [email]);
     if (existing.rows.length > 0) {
       return res.status(409).json({ success: false, message: 'User already exists' });
     }
-    const hashed = await bcrypt.hash(password, 10);
+    const pw = password || require('crypto').randomBytes(16).toString('hex');
+    const hashed = await bcrypt.hash(pw, 10);
     const result = await db.query(
       'INSERT INTO users (FullName, Email, Phone, Role, Password, CreatedAt, IsActive) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, true) RETURNING USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role, CreatedAt as createdat',
-      [name || '', email, phone || null, role || 'user', hashed]
+      [name || '', email, phoneNumber || phone || null, role || 'user', hashed]
     );
     res.status(201).json({ success: true, data: result.rows[0] });
   } catch (err) {
