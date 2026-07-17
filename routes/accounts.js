@@ -58,6 +58,9 @@ router.get('/accounts', authenticateToken, async (req, res) => {
       SELECT
         a.ACC_ID AS id,
         a.ACC_TITLE AS title,
+        a.ACC_TZ_ID AS timezone_id,
+        CASE WHEN a.ACC_OBSERVES_DAYLIGHT = 'Y' THEN 1 ELSE 0 END AS observes_daylight,
+        a.ACC_STATUS AS status,
         a.ACC_DATE_INSERTED AS created_at,
         ISNULL(loc.location_names, '') AS locations,
         ISNULL(loc.location_count, 0) AS location_count,
@@ -109,8 +112,10 @@ router.get('/accounts/:id', authenticateToken, async (req, res) => {
       `SELECT
         a.ACC_ID AS id,
         a.ACC_TITLE AS title,
+        a.ACC_TZ_ID AS timezone_id,
         CASE WHEN a.ACC_OBSERVES_DAYLIGHT = 'Y' THEN 1 ELSE 0 END AS observes_daylight,
         a.ACC_DATE_INSERTED AS created_at,
+        a.ACC_DATE_UPDATED AS updated_at,
         a.ACC_STATUS AS status,
         ISNULL(tz.TZ_TITLE, '') AS tz_title,
         ISNULL(tz.TZ_OFFSET, 0) AS tz_offset,
@@ -152,13 +157,41 @@ router.get('/accounts/:id', authenticateToken, async (req, res) => {
 
 router.post('/accounts', authenticateToken, async (req, res) => {
   try {
-    const { title, timezone_id, observes_daylight } = req.body;
+    const { title, timezone_id, observes_daylight, created_by, usr_id_created_by } = req.body;
     if (!title) return res.status(400).json({ success: false, message: 'Title required' });
+
+    // ACCOUNT: all columns NOT NULL except ACC_ID (sequence). Map every required field.
+    const timezoneId = Number(timezone_id);
+    if (!Number.isFinite(timezoneId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Timezone id required (ACC_TZ_ID). Use a numeric TIME_ZONE.TZ_ID.',
+      });
+    }
+
+    const createdByRaw = created_by ?? usr_id_created_by ?? req.user?.id;
+    const createdBy = createdByRaw != null && createdByRaw !== '' ? Number(createdByRaw) : NaN;
+    if (!Number.isFinite(createdBy)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Creator user id required (ACC_USR_ID_CREATED_BY). Re-login if session is missing user id.',
+      });
+    }
+
     const observesDaylightValue = normalizeObservesDaylight(observes_daylight, { defaultValue: 'N' });
     const result = await devDb.query(
-      `INSERT INTO ACCOUNT (ACC_TITLE, ACC_TZ_ID, ACC_OBSERVES_DAYLIGHT, ACC_STATUS, ACC_DATE_INSERTED)
-       VALUES ($1, $2, $3, 'A', CURRENT_TIMESTAMP) RETURNING ACC_ID AS id, ACC_TITLE AS title`,
-      [title, timezone_id || null, observesDaylightValue]
+      `INSERT INTO ACCOUNT (
+         ACC_USR_ID_CREATED_BY,
+         ACC_TITLE,
+         ACC_TZ_ID,
+         ACC_OBSERVES_DAYLIGHT,
+         ACC_DATE_INSERTED,
+         ACC_DATE_UPDATED,
+         ACC_STATUS
+       )
+       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'A')
+       RETURNING ACC_ID AS id, ACC_TITLE AS title`,
+      [createdBy, title, timezoneId, observesDaylightValue]
     );
     res.status(201).json({ success: true, data: result.rows[0] });
   } catch (err) {
@@ -170,15 +203,23 @@ router.put('/accounts/:id', authenticateToken, async (req, res) => {
   try {
     const { title, timezone_id, observes_daylight, status } = req.body;
     const normalizedObservesDaylight = normalizeObservesDaylight(observes_daylight);
+    const timezoneId =
+      timezone_id === undefined || timezone_id === null || timezone_id === ''
+        ? null
+        : Number(timezone_id);
+    if (timezone_id !== undefined && timezone_id !== null && timezone_id !== '' && !Number.isFinite(timezoneId)) {
+      return res.status(400).json({ success: false, message: 'timezone_id must be a number (ACC_TZ_ID)' });
+    }
     const result = await devDb.query(
       `UPDATE ACCOUNT SET
         ACC_TITLE = COALESCE($1, ACC_TITLE),
         ACC_TZ_ID = COALESCE($2, ACC_TZ_ID),
         ACC_OBSERVES_DAYLIGHT = COALESCE($3, ACC_OBSERVES_DAYLIGHT),
-        ACC_STATUS = COALESCE($4, ACC_STATUS)
+        ACC_STATUS = COALESCE($4, ACC_STATUS),
+        ACC_DATE_UPDATED = CURRENT_TIMESTAMP
        WHERE ACC_ID = $5
        RETURNING ACC_ID AS id, ACC_TITLE AS title`,
-      [title || null, timezone_id || null, normalizedObservesDaylight, status || null, req.params.id]
+      [title || null, timezoneId, normalizedObservesDaylight, status || null, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Account not found' });
     res.json({ success: true, data: result.rows[0] });
@@ -190,7 +231,8 @@ router.put('/accounts/:id', authenticateToken, async (req, res) => {
 router.delete('/accounts/:id', authenticateToken, async (req, res) => {
   try {
     const result = await devDb.query(
-      `UPDATE ACCOUNT SET ACC_STATUS = 'I' WHERE ACC_ID = $1 AND ACC_STATUS = 'A'
+      `UPDATE ACCOUNT SET ACC_STATUS = 'I', ACC_DATE_UPDATED = CURRENT_TIMESTAMP
+       WHERE ACC_ID = $1 AND ACC_STATUS = 'A'
        RETURNING ACC_ID AS id`,
       [req.params.id]
     );

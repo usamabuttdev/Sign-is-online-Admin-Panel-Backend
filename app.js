@@ -6,6 +6,7 @@ const initializeContentSchema = require('./services/content-schema');
 const initializeApiEndpointsSchema = require('./services/api-endpoints-schema');
 const initializeChargeSchema = require('./services/charge-schema');
 const initializeUsersSchema = require('./services/users-schema');
+const initializeSequences = require('./services/sequences-schema');
 
 const app = express();
 app.set('etag', false);
@@ -126,6 +127,11 @@ async function start() {
     await initializeUsersSchema();
   } catch (err) {
     console.warn('MSSQL Users schema init failed:', err.message);
+  }
+  try {
+    await initializeSequences();
+  } catch (err) {
+    console.warn('MSSQL sequence sync failed:', err.message);
   }
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

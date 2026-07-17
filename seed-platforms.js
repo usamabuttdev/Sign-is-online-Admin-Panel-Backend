@@ -45,6 +45,11 @@ async function seedPlatforms() {
 
     const count = await devDb.query(`SELECT COUNT(*) AS cnt FROM PLATFORM`);
     console.log(`Platform seed complete. Total platforms: ${count.rows[0].cnt}`);
+
+    const { syncSequence } = require('./services/sequences-schema');
+    await syncSequence({ sequence: 'PLA_SEQ', table: 'PLATFORM', column: 'PLA_ID' });
+    console.log('PLA_SEQ resynced after seed');
+
     process.exit(0);
   } catch (err) {
     console.error('Platform seed error:', err);

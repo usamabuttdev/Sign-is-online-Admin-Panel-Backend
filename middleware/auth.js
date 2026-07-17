@@ -9,7 +9,7 @@ function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ success: false, message: 'Access token required' });
   if (token === DEV_TOKEN) {
-    req.user = { id: 'dev-user', email: 'dev@localhost', role: 'admin' };
+    req.user = { id: 1, email: 'dev@localhost', role: 'admin' };
     return next();
   }
   try {
