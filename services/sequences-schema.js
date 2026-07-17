@@ -14,6 +14,7 @@ const SEQUENCE_SYNC = [
   { sequence: 'CHA_SEQ', table: 'CHARGE', column: 'CHA_ID' },
   { sequence: 'API_SEQ', table: 'API_ENDPOINTS', column: 'API_ID' },
   { sequence: 'SCR_SEQ', table: 'SCRIPT', column: 'SCR_ID' },
+  { sequence: 'INV_SEQ', table: 'INVOICE', column: 'INV_ID' },
 ];
 
 async function syncSequence({ sequence, table, column }) {

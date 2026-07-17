@@ -15,7 +15,7 @@ function getDefaultPassword() {
 
 router.post('/users', authenticateToken, async (req, res) => {
   try {
-    const { name, email, phoneNumber, phone, role } = req.body;
+    const { name, email, phoneNumber, phone, role, isActive } = req.body;
     if (!email) {
       return res.status(400).json({ success: false, message: 'Email required' });
     }
@@ -25,10 +25,15 @@ router.post('/users', authenticateToken, async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(getDefaultPassword(), 10);
+    const active =
+      isActive === false || isActive === 0 || isActive === 'false' || isActive === '0' ? 0 : 1;
+
+    // Users columns: FullName, Email, Phone, Role, PasswordHash, IsActive, CreatedAt,
+    // USR_ADVISORY_COUNCIL (NOT NULL). No address/company/avatar/country columns.
     await db.query(
-      `INSERT INTO Users (FullName, Email, Phone, Role, PasswordHash, IsActive, CreatedAt)
-       VALUES ($1, $2, $3, $4, $5, 1, CURRENT_TIMESTAMP)`,
-      [name || '', email, phoneNumber || phone || null, role || 'user', hashed]
+      `INSERT INTO Users (FullName, Email, Phone, Role, PasswordHash, IsActive, USR_ADVISORY_COUNCIL, CreatedAt)
+       VALUES ($1, $2, $3, $4, $5, $6, 'N', CURRENT_TIMESTAMP)`,
+      [name || '', email, phoneNumber || phone || null, role || 'user', hashed, active]
     );
     const result = await db.query(
       `SELECT USR_ID as id, FullName as name, Email as email, Phone as phone, Role as role,
@@ -44,21 +49,32 @@ router.post('/users', authenticateToken, async (req, res) => {
 
 router.put('/users/:id', authenticateToken, async (req, res) => {
   try {
-    const { name, email, phone, role, password, isActive } = req.body;
+    const { name, email, phone, phoneNumber, role, password, isActive, status } = req.body;
     const fields = [];
     const params = [];
     let paramIdx = 1;
 
     if (name !== undefined) { fields.push(`FullName = $${paramIdx++}`); params.push(name); }
     if (email !== undefined) { fields.push(`Email = $${paramIdx++}`); params.push(email); }
-    if (phone !== undefined) { fields.push(`Phone = $${paramIdx++}`); params.push(phone); }
+    const phoneVal = phone !== undefined ? phone : phoneNumber;
+    if (phoneVal !== undefined) { fields.push(`Phone = $${paramIdx++}`); params.push(phoneVal); }
     if (role !== undefined) { fields.push(`Role = $${paramIdx++}`); params.push(role); }
     if (password !== undefined) {
       const hashed = await bcrypt.hash(password, 10);
       fields.push(`PasswordHash = $${paramIdx++}`);
       params.push(hashed);
     }
-    if (isActive !== undefined) { fields.push(`IsActive = $${paramIdx++}`); params.push(isActive); }
+
+    let activeVal;
+    if (isActive !== undefined) {
+      activeVal = isActive === false || isActive === 0 || isActive === 'false' || isActive === '0' ? 0 : 1;
+    } else if (status !== undefined) {
+      activeVal = status === 'banned' || status === 'I' || status === 'inactive' ? 0 : 1;
+    }
+    if (activeVal !== undefined) {
+      fields.push(`IsActive = $${paramIdx++}`);
+      params.push(activeVal);
+    }
 
     if (fields.length === 0) {
       return res.status(400).json({ success: false, message: 'No fields to update' });
