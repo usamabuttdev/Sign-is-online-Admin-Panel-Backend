@@ -8,9 +8,9 @@ router.get('/devices', authenticateToken, async (req, res) => {
   try {
     const { pageno = 1, search = '' } = req.query;
     const limit = 10;
-    const offset = (parseInt(pageno) - 1) * limit;
+    const offset = (parseInt(pageno, 10) - 1) * limit;
 
-    let where = '1=1';
+    let where = "d.status <> 'deleted'";
     const params = [];
     if (search) {
       where += ' AND (d.device_id LIKE @p1 OR d.hardware_type LIKE @p1 OR d.status LIKE @p1)';
@@ -43,8 +43,8 @@ router.get('/devices', authenticateToken, async (req, res) => {
     res.json({
       success: true,
       data: result.rows,
-      total: parseInt(countResult.rows[0].cnt),
-      page: parseInt(pageno),
+      total: parseInt(countResult.rows[0].cnt, 10),
+      page: parseInt(pageno, 10),
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -76,12 +76,29 @@ router.put('/devices/:id', authenticateToken, async (req, res) => {
         firmware_version = COALESCE($3, firmware_version),
         status = COALESCE($4, status),
         last_heartbeat = COALESCE($5, last_heartbeat)
-       WHERE id = $6
+       WHERE id = $6 AND status <> 'deleted'
        RETURNING id, device_id`,
       [location_id || null, hardware_type || null, firmware_version || null, status || null, last_heartbeat || null, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Device not found' });
     res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.delete('/devices/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await devDb.query(
+      `UPDATE DEVICES SET status = 'deleted'
+       WHERE id = $1 AND status <> 'deleted'
+       RETURNING id`,
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Device not found' });
+    }
+    res.json({ success: true, message: 'Device soft-deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

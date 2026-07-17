@@ -196,4 +196,20 @@ router.put('/locations/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.delete('/locations/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await devDb.query(
+      `UPDATE LOCATION SET LOC_STATUS = 'I' WHERE LOC_ID = $1 AND LOC_STATUS = 'A'
+       RETURNING LOC_ID AS id`,
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Location not found' });
+    }
+    res.json({ success: true, message: 'Location soft-deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

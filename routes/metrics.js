@@ -166,4 +166,20 @@ router.put('/metrics/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.delete('/metrics/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await devDb.query(
+      `UPDATE METRIC SET MET_STATUS = 'I' WHERE MET_ID = $1 AND MET_STATUS = 'A'
+       RETURNING MET_ID AS id`,
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Metric not found' });
+    }
+    res.json({ success: true, message: 'Metric soft-deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

@@ -20,11 +20,15 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 10, keyword = '', isActive } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
-    let where = 'WHERE 1=1';
+    let where = "WHERE FAQ_STATUS = 'A'";
     const params = [];
     let idx = 1;
-    if (keyword) { where += ` AND (FAQ_QUESTION_TEXT ILIKE $${idx++} OR FAQ_ANSWER_TEXT ILIKE $${idx++}`; params.push(`%${keyword}%`, `%${keyword}%`); }
-    if (isActive !== undefined && isActive !== '') { where += ` AND FAQ_STATUS = $${idx++}`; params.push(isActive === 'true' ? 'A' : 'I'); }
+    if (keyword) { where += ` AND (FAQ_QUESTION_TEXT LIKE $${idx} OR FAQ_ANSWER_TEXT LIKE $${idx})`; params.push(`%${keyword}%`); idx += 1; }
+    if (isActive !== undefined && isActive !== '') {
+      where = where.replace("FAQ_STATUS = 'A'", `FAQ_STATUS = $${idx}`);
+      params.push(isActive === 'true' ? 'A' : 'I');
+      idx += 1;
+    }
     const countResult = await db.query(`SELECT COUNT(*) AS cnt FROM FREQUENTLY_ASKED_QUESTION ${where}`, params);
     const result = await db.query(`SELECT FAQ_ID, FAQ_QUESTION_TEXT, FAQ_ANSWER_TEXT, FAQ_STATUS, FAQ_DATE_INSERTED, FAQ_DATE_UPDATED FROM FREQUENTLY_ASKED_QUESTION ${where} ORDER BY FAQ_ID DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, parseInt(limit), offset]);
     res.json({ success: true, data: result.rows.map(mapRow), total: parseInt(countResult.rows[0].cnt), page: parseInt(page) });
@@ -37,11 +41,15 @@ router.get('/all', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 10, keyword = '', isActive } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
-    let where = 'WHERE 1=1';
+    let where = "WHERE FAQ_STATUS = 'A'";
     const params = [];
     let idx = 1;
-    if (keyword) { where += ` AND (FAQ_QUESTION_TEXT ILIKE $${idx++} OR FAQ_ANSWER_TEXT ILIKE $${idx++}`; params.push(`%${keyword}%`, `%${keyword}%`); }
-    if (isActive !== undefined && isActive !== '') { where += ` AND FAQ_STATUS = $${idx++}`; params.push(isActive === 'true' ? 'A' : 'I'); }
+    if (keyword) { where += ` AND (FAQ_QUESTION_TEXT LIKE $${idx} OR FAQ_ANSWER_TEXT LIKE $${idx})`; params.push(`%${keyword}%`); idx += 1; }
+    if (isActive !== undefined && isActive !== '') {
+      where = where.replace("FAQ_STATUS = 'A'", `FAQ_STATUS = $${idx}`);
+      params.push(isActive === 'true' ? 'A' : 'I');
+      idx += 1;
+    }
     const countResult = await db.query(`SELECT COUNT(*) AS cnt FROM FREQUENTLY_ASKED_QUESTION ${where}`, params);
     const result = await db.query(`SELECT FAQ_ID, FAQ_QUESTION_TEXT, FAQ_ANSWER_TEXT, FAQ_STATUS, FAQ_DATE_INSERTED, FAQ_DATE_UPDATED FROM FREQUENTLY_ASKED_QUESTION ${where} ORDER BY FAQ_ID DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, parseInt(limit), offset]);
     res.json({ success: true, data: result.rows.map(mapRow), total: parseInt(countResult.rows[0].cnt), page: parseInt(page) });
@@ -77,9 +85,15 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const result = await db.query('DELETE FROM FREQUENTLY_ASKED_QUESTION WHERE FAQ_ID = $1 RETURNING FAQ_ID', [req.params.id]);
+    const result = await db.query(
+      `UPDATE FREQUENTLY_ASKED_QUESTION
+       SET FAQ_STATUS = 'I', FAQ_DATE_UPDATED = CURRENT_TIMESTAMP
+       WHERE FAQ_ID = $1 AND FAQ_STATUS = 'A'
+       RETURNING FAQ_ID`,
+      [req.params.id]
+    );
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'FAQ not found' });
-    res.json({ success: true, message: 'FAQ deleted' });
+    res.json({ success: true, message: 'FAQ soft-deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

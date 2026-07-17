@@ -13,6 +13,7 @@ router.get('/list', async (req, res) => {
         '' AS description,
         PRO_DATE_INSERTED AS created_at
       FROM PRODUCT
+      WHERE PRO_STATUS = 'A'
       ORDER BY PRO_ID
     `);
     res.json({ products: result.rows });
@@ -33,7 +34,7 @@ router.get('/details', async (req, res) => {
         '' AS description,
         PRO_DATE_INSERTED AS created_at
       FROM PRODUCT
-      WHERE PRO_ID = @p1
+      WHERE PRO_ID = @p1 AND PRO_STATUS = 'A'
     `, [productId]);
     if (result.rows.length === 0) return res.status(404).json({ message: 'Product not found' });
     res.json({ product: result.rows[0] });
@@ -55,7 +56,7 @@ router.get('/search', async (req, res) => {
           '' AS description,
           PRO_DATE_INSERTED AS created_at
         FROM PRODUCT
-        WHERE PRO_TITLE LIKE @p1
+        WHERE PRO_TITLE LIKE @p1 AND PRO_STATUS = 'A'
         ORDER BY PRO_ID
       `, [`%${query}%`]);
     } else {
@@ -67,6 +68,7 @@ router.get('/search', async (req, res) => {
           '' AS description,
           PRO_DATE_INSERTED AS created_at
         FROM PRODUCT
+        WHERE PRO_STATUS = 'A'
         ORDER BY PRO_ID
       `);
     }

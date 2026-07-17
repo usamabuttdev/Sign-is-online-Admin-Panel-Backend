@@ -8,9 +8,9 @@ router.get('/apis', authenticateToken, async (req, res) => {
   try {
     const { pageno = 1, search = '' } = req.query;
     const limit = 10;
-    const offset = (parseInt(pageno) - 1) * limit;
+    const offset = (parseInt(pageno, 10) - 1) * limit;
 
-    let where = '1=1';
+    let where = "ISNULL(a.API_STATUS, 'A') = 'A'";
     const params = [];
     if (search) {
       where += ' AND (a.API_TITLE LIKE @p1 OR a.API_DESCRIPTION LIKE @p1)';
@@ -41,8 +41,8 @@ router.get('/apis', authenticateToken, async (req, res) => {
     res.json({
       success: true,
       data: result.rows,
-      total: parseInt(countResult.rows[0].cnt),
-      page: parseInt(pageno),
+      total: parseInt(countResult.rows[0].cnt, 10),
+      page: parseInt(pageno, 10),
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -52,7 +52,9 @@ router.get('/apis', authenticateToken, async (req, res) => {
 router.get('/apis/:id', authenticateToken, async (req, res) => {
   try {
     const result = await devDb.query(
-      'SELECT API_ID AS id, API_TITLE AS title, API_DESCRIPTION AS description FROM API_ENDPOINTS WHERE API_ID = @p1',
+      `SELECT API_ID AS id, API_TITLE AS title, API_DESCRIPTION AS description
+       FROM API_ENDPOINTS
+       WHERE API_ID = @p1 AND ISNULL(API_STATUS, 'A') = 'A'`,
       [req.params.id]
     );
     if (result.rows.length === 0) {
@@ -69,8 +71,8 @@ router.post('/apis', authenticateToken, async (req, res) => {
     const { title, description } = req.body;
     if (!title) return res.status(400).json({ success: false, message: 'Title required' });
     const result = await devDb.query(
-      `INSERT INTO API_ENDPOINTS (API_TITLE, API_DESCRIPTION, API_CREATED_AT)
-       VALUES ($1, $2, CURRENT_TIMESTAMP) RETURNING API_ID AS id, API_TITLE AS title`,
+      `INSERT INTO API_ENDPOINTS (API_TITLE, API_DESCRIPTION, API_STATUS, API_CREATED_AT)
+       VALUES ($1, $2, 'A', CURRENT_TIMESTAMP) RETURNING API_ID AS id, API_TITLE AS title`,
       [title, description || null]
     );
     res.status(201).json({ success: true, data: result.rows[0] });
@@ -83,11 +85,32 @@ router.put('/apis/:id', authenticateToken, async (req, res) => {
   try {
     const { title, description } = req.body;
     const result = await devDb.query(
-      `UPDATE API_ENDPOINTS SET API_TITLE = COALESCE($1, API_TITLE), API_DESCRIPTION = COALESCE($2, API_DESCRIPTION) WHERE API_ID = $3 RETURNING API_ID AS id, API_TITLE AS title`,
+      `UPDATE API_ENDPOINTS SET
+        API_TITLE = COALESCE($1, API_TITLE),
+        API_DESCRIPTION = COALESCE($2, API_DESCRIPTION)
+       WHERE API_ID = $3 AND ISNULL(API_STATUS, 'A') = 'A'
+       RETURNING API_ID AS id, API_TITLE AS title`,
       [title || null, description || null, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'API not found' });
     res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.delete('/apis/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await devDb.query(
+      `UPDATE API_ENDPOINTS SET API_STATUS = 'I'
+       WHERE API_ID = $1 AND ISNULL(API_STATUS, 'A') = 'A'
+       RETURNING API_ID AS id`,
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'API not found' });
+    }
+    res.json({ success: true, message: 'API soft-deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

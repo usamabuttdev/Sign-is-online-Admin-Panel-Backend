@@ -19,6 +19,11 @@ async function initializeApiEndpointsSchema() {
         )
     `);
     console.log('API_ENDPOINTS table schema initialized');
+    await db.query(`
+      IF COL_LENGTH('API_ENDPOINTS', 'API_STATUS') IS NULL
+        ALTER TABLE API_ENDPOINTS ADD API_STATUS CHAR(1) NOT NULL CONSTRAINT DF_API_ENDPOINTS_STATUS DEFAULT 'A'
+    `);
+    console.log('API_ENDPOINTS.API_STATUS column ensured');
   } catch (err) {
     console.error('API_ENDPOINTS schema init error:', err.message);
   }

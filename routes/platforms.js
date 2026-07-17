@@ -112,4 +112,20 @@ router.put('/platforms/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.delete('/platforms/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await devDb.query(
+      `UPDATE PLATFORM SET PLA_STATUS = 'I' WHERE PLA_ID = $1 AND PLA_STATUS = 'A'
+       RETURNING PLA_ID AS id`,
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Platform not found' });
+    }
+    res.json({ success: true, message: 'Platform soft-deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

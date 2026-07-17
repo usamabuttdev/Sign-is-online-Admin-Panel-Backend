@@ -187,4 +187,20 @@ router.put('/accounts/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.delete('/accounts/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await devDb.query(
+      `UPDATE ACCOUNT SET ACC_STATUS = 'I' WHERE ACC_ID = $1 AND ACC_STATUS = 'A'
+       RETURNING ACC_ID AS id`,
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Account not found' });
+    }
+    res.json({ success: true, message: 'Account soft-deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

@@ -61,6 +61,22 @@ router.put('/products/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.delete('/products/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await devDb.query(
+      `UPDATE PRODUCT SET PRO_STATUS = 'I' WHERE PRO_ID = $1 AND PRO_STATUS = 'A'
+       RETURNING PRO_ID AS id`,
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    res.json({ success: true, message: 'Product soft-deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 router.get('/products', authenticateToken, async (req, res) => {
   try {
     const { pageno = 1, search = '' } = req.query;
