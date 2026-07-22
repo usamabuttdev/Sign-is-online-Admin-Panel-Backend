@@ -159,28 +159,5 @@
         "pct": 90
       }
     ]
-  },
-  {
-    "id": 8,
-    "title": "New Signups",
-    "query": "SELECT COUNT(*) FROM users",
-    "goal": 1000,
-    "units": "",
-    "direction": "H",
-    "frequency": "W",
-    "description": "Weekly new user signups",
-    "currentValue": 850,
-    "currentPct": 85,
-    "currentDate": "2026-06-29T00:00:00.000Z",
-    "previousValue": null,
-    "previousPct": null,
-    "pctChange": null,
-    "history": [
-      {
-        "date": "2026-06-29T00:00:00.000Z",
-        "value": 850,
-        "pct": 85
-      }
-    ]
   }
 ]

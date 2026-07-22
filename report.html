@@ -1,0 +1,402 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Weekly Metrics Report</title>
+  <style>
+    :root {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      color: #0f172a;
+      background: #f6f9fc;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f6f9fc;
+    }
+    .metric-page {
+      page-break-after: always;
+      background: white;
+      padding: 2.4cm;
+      min-height: 297mm;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    header h1 {
+      margin: 0.2rem 0;
+      font-size: 2.8rem;
+      letter-spacing: -0.02em;
+      color: #0c4a6e;
+    }
+    .kicker {
+      font-size: 0.95rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #475569;
+    }
+    .description {
+      margin: 0;
+      color: #475569;
+      max-width: 42ch;
+      font-size: 1rem;
+    }
+    .metric-body {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.2rem;
+    }
+    .metric-summary {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .metric-summary > div {
+      flex: 1;
+      min-width: 150px;
+      background: #eef2ff;
+      padding: 1.1rem;
+      border-radius: 0.9rem;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+    }
+    .label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #475569;
+    }
+    .value {
+      margin: 0.2rem 0;
+      font-size: 2rem;
+      color: #111827;
+    }
+    .sub {
+      color: #475569;
+      font-size: 0.9rem;
+    }
+    .chart-block {
+      background: #ffffff;
+      border-radius: 1rem;
+      padding: 1.2rem;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e2e8f0;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .chart-title {
+      margin: 0;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .chart-grid {
+      display: flex;
+      gap: 0.4rem;
+      align-items: flex-end;
+      height: 140px;
+    }
+    .bar {
+      flex: 1;
+      background: linear-gradient(180deg, #3b82f6, #2563eb);
+      border-radius: 0.5rem 0.5rem 0 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      position: relative;
+    }
+    .bar span {
+      font-size: 0.7rem;
+      color: #e0e7ff;
+      margin-bottom: 0.4rem;
+    }
+    .insights {
+      background: #111827;
+      color: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      line-height: 1.7;
+    }
+    .insights p {
+      margin: 0;
+    }
+    .empty-state {
+      font-size: 1rem;
+      color: #94a3b8;
+      padding: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  
+    <section class="metric-page">
+      <header>
+        <p class="kicker">Metric 1</p>
+        <h1>Revenue</h1>
+        <p class="description">Total monthly revenue from all sources</p>
+      </header>
+      <div class="metric-body">
+        <div class="metric-summary">
+          <div>
+            <span class="label">Current</span>
+            <p class="value">78500 $</p>
+            <span class="sub">as of 2026-06-28</span>
+          </div>
+          <div>
+            <span class="label">Goal</span>
+            <p class="value">100000 $</p>
+            <span class="sub">Higher is better</span>
+          </div>
+          <div>
+            <span class="label">Bridge</span>
+            <p class="value">79%</p>
+            <span class="sub">% of target</span>
+          </div>
+        </div>
+        <div class="chart-block">
+          <p class="chart-title">History</p>
+          <div class="chart-grid">
+        <div class="bar" style="height:79%;" title="2026-06-28: 78500$">
+          <span>2026-06-28</span>
+        </div></div>
+        </div>
+      </div>
+      <div class="insights">
+        <p>Need to accelerate efforts; still below 90% of the goal.</p>
+        <p><strong>Prior week comparison:</strong> Not available yet.</p>
+      </div>
+    </section>
+  
+    <section class="metric-page">
+      <header>
+        <p class="kicker">Metric 2</p>
+        <h1>Active Users</h1>
+        <p class="description">Daily active users across all platforms</p>
+      </header>
+      <div class="metric-body">
+        <div class="metric-summary">
+          <div>
+            <span class="label">Current</span>
+            <p class="value">4200 </p>
+            <span class="sub">as of 2026-06-30</span>
+          </div>
+          <div>
+            <span class="label">Goal</span>
+            <p class="value">5000 </p>
+            <span class="sub">Higher is better</span>
+          </div>
+          <div>
+            <span class="label">Bridge</span>
+            <p class="value">84%</p>
+            <span class="sub">% of target</span>
+          </div>
+        </div>
+        <div class="chart-block">
+          <p class="chart-title">History</p>
+          <div class="chart-grid">
+        <div class="bar" style="height:84%;" title="2026-06-30: 4200">
+          <span>2026-06-30</span>
+        </div></div>
+        </div>
+      </div>
+      <div class="insights">
+        <p>Need to accelerate efforts; still below 90% of the goal.</p>
+        <p><strong>Prior week comparison:</strong> Not available yet.</p>
+      </div>
+    </section>
+  
+    <section class="metric-page">
+      <header>
+        <p class="kicker">Metric 3</p>
+        <h1>Order Conversion</h1>
+        <p class="description">Percentage of visitors who complete an order</p>
+      </header>
+      <div class="metric-body">
+        <div class="metric-summary">
+          <div>
+            <span class="label">Current</span>
+            <p class="value">62 %</p>
+            <span class="sub">as of 2026-06-30</span>
+          </div>
+          <div>
+            <span class="label">Goal</span>
+            <p class="value">75 %</p>
+            <span class="sub">Higher is better</span>
+          </div>
+          <div>
+            <span class="label">Bridge</span>
+            <p class="value">83%</p>
+            <span class="sub">% of target</span>
+          </div>
+        </div>
+        <div class="chart-block">
+          <p class="chart-title">History</p>
+          <div class="chart-grid">
+        <div class="bar" style="height:83%;" title="2026-06-30: 62%">
+          <span>2026-06-30</span>
+        </div></div>
+        </div>
+      </div>
+      <div class="insights">
+        <p>Need to accelerate efforts; still below 90% of the goal.</p>
+        <p><strong>Prior week comparison:</strong> Not available yet.</p>
+      </div>
+    </section>
+  
+    <section class="metric-page">
+      <header>
+        <p class="kicker">Metric 4</p>
+        <h1>Avg Response Time</h1>
+        <p class="description">Average hours to first response on support tickets</p>
+      </header>
+      <div class="metric-body">
+        <div class="metric-summary">
+          <div>
+            <span class="label">Current</span>
+            <p class="value">18 h</p>
+            <span class="sub">as of 2026-06-30</span>
+          </div>
+          <div>
+            <span class="label">Goal</span>
+            <p class="value">24 h</p>
+            <span class="sub">Lower is better</span>
+          </div>
+          <div>
+            <span class="label">Bridge</span>
+            <p class="value">75%</p>
+            <span class="sub">% of target</span>
+          </div>
+        </div>
+        <div class="chart-block">
+          <p class="chart-title">History</p>
+          <div class="chart-grid">
+        <div class="bar" style="height:75%;" title="2026-06-30: 18h">
+          <span>2026-06-30</span>
+        </div></div>
+        </div>
+      </div>
+      <div class="insights">
+        <p>Performing well below the ceiling; keep processes steady.</p>
+        <p><strong>Prior week comparison:</strong> Not available yet.</p>
+      </div>
+    </section>
+  
+    <section class="metric-page">
+      <header>
+        <p class="kicker">Metric 5</p>
+        <h1>Customer Churn</h1>
+        <p class="description">Monthly customer churn rate</p>
+      </header>
+      <div class="metric-body">
+        <div class="metric-summary">
+          <div>
+            <span class="label">Current</span>
+            <p class="value">4.2 %</p>
+            <span class="sub">as of 2026-06-01</span>
+          </div>
+          <div>
+            <span class="label">Goal</span>
+            <p class="value">5 %</p>
+            <span class="sub">Lower is better</span>
+          </div>
+          <div>
+            <span class="label">Bridge</span>
+            <p class="value">84%</p>
+            <span class="sub">% of target</span>
+          </div>
+        </div>
+        <div class="chart-block">
+          <p class="chart-title">History</p>
+          <div class="chart-grid">
+        <div class="bar" style="height:84%;" title="2026-06-01: 4.2%">
+          <span>2026-06-01</span>
+        </div></div>
+        </div>
+      </div>
+      <div class="insights">
+        <p>Performing well below the ceiling; keep processes steady.</p>
+        <p><strong>Prior week comparison:</strong> Not available yet.</p>
+      </div>
+    </section>
+  
+    <section class="metric-page">
+      <header>
+        <p class="kicker">Metric 6</p>
+        <h1>NPS Score</h1>
+        <p class="description">Net Promoter Score from customer surveys</p>
+      </header>
+      <div class="metric-body">
+        <div class="metric-summary">
+          <div>
+            <span class="label">Current</span>
+            <p class="value">65 </p>
+            <span class="sub">as of 2026-05-31</span>
+          </div>
+          <div>
+            <span class="label">Goal</span>
+            <p class="value">70 </p>
+            <span class="sub">Higher is better</span>
+          </div>
+          <div>
+            <span class="label">Bridge</span>
+            <p class="value">93%</p>
+            <span class="sub">% of target</span>
+          </div>
+        </div>
+        <div class="chart-block">
+          <p class="chart-title">History</p>
+          <div class="chart-grid">
+        <div class="bar" style="height:93%;" title="2026-05-31: 65">
+          <span>2026-05-31</span>
+        </div></div>
+        </div>
+      </div>
+      <div class="insights">
+        <p>Close to goal; small tweaks could push it over the line.</p>
+        <p><strong>Prior week comparison:</strong> Not available yet.</p>
+      </div>
+    </section>
+  
+    <section class="metric-page">
+      <header>
+        <p class="kicker">Metric 7</p>
+        <h1>Page Load Time</h1>
+        <p class="description">Average page load time in seconds</p>
+      </header>
+      <div class="metric-body">
+        <div class="metric-summary">
+          <div>
+            <span class="label">Current</span>
+            <p class="value">1.8 s</p>
+            <span class="sub">as of 2026-06-30</span>
+          </div>
+          <div>
+            <span class="label">Goal</span>
+            <p class="value">2 s</p>
+            <span class="sub">Lower is better</span>
+          </div>
+          <div>
+            <span class="label">Bridge</span>
+            <p class="value">90%</p>
+            <span class="sub">% of target</span>
+          </div>
+        </div>
+        <div class="chart-block">
+          <p class="chart-title">History</p>
+          <div class="chart-grid">
+        <div class="bar" style="height:90%;" title="2026-06-30: 1.8s">
+          <span>2026-06-30</span>
+        </div></div>
+        </div>
+      </div>
+      <div class="insights">
+        <p>Performing well below the ceiling; keep processes steady.</p>
+        <p><strong>Prior week comparison:</strong> Not available yet.</p>
+      </div>
+    </section>
+  
+</body>
+</html>
